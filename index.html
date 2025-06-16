@@ -1,3 +1,4 @@
+
 <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
@@ -37,1149 +38,444 @@
         }
         return gk_fileData[filename] || "";
         }
-</script>
-<!DOCTYPE html>
+        </script><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Games.88</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>UBGames.88</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background: #000;
+            background-color: #000;
             color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            min-height: 100vh;
             overflow-x: hidden;
         }
-
-        #dots-overlay {
+        .hamburger {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            z-index: 2000;
+            display: block;
+        }
+        .hamburger.open {
+            display: none;
+        }
+        .hamburger div {
+            width: 30px;
+            height: 4px;
+            background-color: #fff;
+            margin: 6px 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #1a1a1a;
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-200px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .sidebar a {
+            color: #fff;
+            text-decoration: none;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #333;
+        }
+        .sidebar a.active {
+            background-color: #333;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: margin-left 0.3s ease;
+        }
+        .content.shifted {
+            margin-left: 200px;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            margin: 0;
+            animation: fadeIn 2s ease-in-out;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+        .game-card {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        .game-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        .game-card h2 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        .modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            z-index: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-
-        .dot {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #fff;
-            border-radius: 50%;
-            animation: fall linear infinite;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(-100vh);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh);
-                opacity: 0.5;
-            }
-        }
-
-        .main-content {
-            padding: 40px;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        .clock {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #fff;
-            font-size: 24px;
-            font-weight: 600;
-            z-index: 10;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .clock:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .clock:active {
-            transform: scale(0.98);
-        }
-
-        .clock-menu {
-            position: absolute;
-            top: 60px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.9);
+        .modal-content {
+            width: 80%;
+            max-width: 1000px;
+            height: 80vh;
+            background-color: #000;
             border-radius: 10px;
-            padding: 30px;
-            width: 350px;
-            z-index: 100;
-            display: none;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
         }
-
-        .clock-menu.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .clock-menu h4 {
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-
-        .stopwatch, .timer {
-            margin-bottom: 25px;
-        }
-
-        .stopwatch p, .timer p {
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
-
-        .timer input {
-            width: 50px;
-            padding: 5px;
-            background: rgba(255, 255, 255, 0.1);
+        .modal iframe {
+            width: 100%;
+            height: calc(100% - 50px);
             border: none;
-            color: #fff;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #1a1a1a;
+        }
+        .modal-buttons button {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
             border-radius: 5px;
-            margin-right: 10px;
-            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.3s ease;
         }
-
-        .timer input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.2);
+        .modal-buttons button:hover {
+            background-color: #ddd;
         }
-
-        .clock-menu button {
-            background: #fff;
+        .ai-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        .ai-input {
+            background-color: #fff;
             color: #000;
             border: none;
             padding: 8px 12px;
+            font-size: 0.9rem;
+            font-family: 'Montserrat', sans-serif;
+            width: 200px;
             border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            font-size: 12px;
-            transition: background 0.2s ease;
-        }
-
-        .clock-menu button:hover:not(:disabled) {
-            background: #ccc;
-        }
-
-        .clock-menu button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .close-menu {
-            display: block;
-            margin: 20px auto 0;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
-        }
-
-        .header p {
-            font-size: 18px;
-            line-height: 1.6;
-            max-width: 900px;
-            margin: 0 auto;
-            color: #ccc;
-        }
-
-        .game-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .game-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .game-card:active {
-            transform: scale(0.98);
-        }
-
-        .game-card h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        .game-card p {
-            font-size: 14px;
-            color: #ccc;
-        }
-
-        .proxy-section {
-            margin: 40px auto;
-            max-width: 800px;
-            text-align: center;
-        }
-
-        .proxy-section h3 {
-            font-size: 24px;
             margin-bottom: 20px;
         }
-
-        .proxy-iframe {
-            width: 100%;
-            height: 400px;
-            border: none;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        .ai-input::placeholder {
+            color: #555;
         }
-
-        .ai-section {
-            margin: 40px auto;
-            max-width: 800px;
-            text-align: center;
-        }
-
-        .ai-section h3 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .ai-input-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .ai-input {
-            flex: 1;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #fff;
-
-
-            outline: none;
-            transition: background 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .ai-input:focus {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .ai-send-button {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .ai-send-button:hover {
-            background: #ccc;
-        }
-
         .ai-response {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+            background-color: #1a1a1a;
             border-radius: 8px;
-            font-size: 14px;
-            color: #ccc;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: left;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            width: 100%;
-        }
-
-        .footer a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-
-        .footer a:hover {
-            color: #ccc;
-        }
-
-        .signature {
-            font-size: 14px;
-            color: #ccc;
-            margin-top: 10px;
-        }
-
-        #game-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.95);
-            width: 90%;
-            max-width: 800px;
-            height: 80vh;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 15px;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        #game-container.active {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        #game-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        #close-game, #fullscreen-game {
-            position: absolute;
-            top: 10px;
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        #close-game {
-            right: 10px;
-        }
-
-        #fullscreen-game {
-            right: 80px;
-        }
-
-        #close-game:hover, #fullscreen-game:hover {
-            background: #ccc;
-        }
-
-        .code-input-section {
-            text-align: center;
-            margin: 40px auto;
-            max-width: 300px;
-        }
-
-        .code-input {
-            width: 100%;
             padding: 10px;
-            background: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #000;
-            outline: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: box-shadow 0.2s ease;
+            text-align: center;
+            font-size: 1rem;
         }
-
-        .code-input:focus {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.8);
-            background: #fff;
-            color: #000;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .notification.active {
-            opacity: 1;
-            transform: translateX(-50%) scale(1);
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 20px;
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                transform: translateY(-100%);
+                flex-direction: column;
             }
-
+            .sidebar.open {
+                transform: translateY(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+            .content.shifted {
+                margin-top: 120px;
+            }
             .header h1 {
-                font-size: 36px;
+                font-size: 2.5rem;
             }
-
-            .header p {
-                font-size: 16px;
+            .game-grid {
+                grid-template-columns: 1fr;
             }
-
-            #game-container {
+            .modal-content {
                 width: 95%;
                 height: 70vh;
             }
-
-            .game-section {
-                max-width: 100%;
-            }
-
-            .proxy-iframe {
-                height: 300px;
-            }
-
-            #fullscreen-game {
-                right: 70px;
-            }
-
-            .clock {
-                font-size: 18px;
-                top: 15px;
-                left: 15px;
-            }
-
-            .clock-menu {
-                width: 280px;
-                top: 50px;
-                left: 15px;
-                padding: 20px;
-            }
-
-            .clock-menu h4 {
-                font-size: 16px;
-                margin-bottom: 10px;
-            }
-
-            .stopwatch, .timer {
-                margin-bottom: 20px;
-            }
-
-            .stopwatch p, .timer p {
-                font-size: 18px;
-                margin-bottom: 10px;
-            }
-
-            .timer input {
-                width: 40px;
-                font-size: 12px;
-                margin-right: 8px;
-            }
-
-            .clock-menu button {
-                padding: 6px 10px;
-                font-size: 10px;
-                margin-right: 8px;
-                margin-bottom: 8px;
-            }
-
-            .close-menu {
-                margin: 15px auto 0;
-            }
-
-            .code-input-section {
-                max-width: 250px;
-            }
-
-            .code-input {
-                font-size: 12px;
-                padding: 8px;
-            }
-
-            .ai-section h3 {
-                font-size: 20px;
-            }
-
             .ai-input {
-                font-size: 12px;
-                padding: 8px;
-            }
-
-            .ai-send-button {
-                font-size: 12px;
-                padding: 8px 15px;
-            }
-
-            .ai-response {
-                font-size: 12px;
-                padding: 10px;
+                width: 90%;
             }
         }
     </style>
 </head>
 <body>
-    <canvas id="dots-overlay"></canvas>
-
-    <div class="main-content">
-        <div class="clock" id="clock"></div>
-        <div class="clock-menu" id="clock-menu">
-            <div class="stopwatch">
-                <h4>Cronómetro</h4>
-                <p id="stopwatch-display">00:00:00.000</p>
-                <button id="stopwatch-start">Iniciar</button>
-                <button id="stopwatch-stop" disabled>Pausar</button>
-                <button id="stopwatch-reset">Reiniciar</button>
+    <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="sidebar" id="sidebar">
+        <a href="#" class="active" onclick="showSection('games')">Juegos</a>
+        <a href="#" onclick="showSection('ai')">IA</a>
+    </div>
+    <div class="content" id="content">
+        <div id="games-section">
+            <div class="header">
+                <h1>UBGames.88</h1>
             </div>
-            <div class="timer">
-                <h4>Temporizador</h4>
-                <p id="timer-display">00:00</p>
-                <input type="number" id="timer-minutes" min="0" max="59" placeholder="Min" value="0">
-                <input type="number" id="timer-seconds" min="0" max="59" placeholder="Seg" value="0">
-                <button id="timer-start">Iniciar</button>
-                <button id="timer-pause" disabled>Pausar</button>
-                <button id="timer-reset">Reiniciar</button>
-            </div>
-            <button class="close-menu" id="close-menu">Cerrar</button>
-        </div>
-        <div class="header">
-            <h1>Games.88</h1>
-            <p>
-                Games.88 es tu plataforma ideal para disfrutar de juegos durante tus descansos o momentos libres. 
-                Hemos diseñado esta página con un estilo minimalista para que puedas jugar facilmente y sin complicaciones.
-                Explora nuestras plataformas de juegos favoritas, optimizadas para una experiencia rápida y divertida. Nuestra interfaz es 
-                intuitiva y fácil de navegar, para que puedas sumergirte en la diversión sin complicaciones. Games.88 es tu rincón para desconectar y disfrutar.
-            </p>
-        </div>
-
-        <div class="game-section" id="games">
-            <div class="game-card" onclick="playGame('azgames')">
-                <h3>AZGames.io</h3>
-                <p>Una colección de juegos .io, clicker, carreras y más, perfectos para partidas rápidas.</p>
-            </div>
-            <div class="game-card" onclick="playGame('minecraft')">
-                <h3>Minecraft</h3>
-                <p>Minecraft original para jugar con tu imaginación hasta el infinito y más allá!</p>
-            </div>
-            <div class="game-card" onclick="playGame('easyfun')">
-                <h3>EasyFun.gg</h3>
-                <p>Disfruta de una variedad de juegos divertidos y accesibles para todas las edades.</p>
-            </div>
-            <div class="game-card" onclick="playGame('23azo')">
-                <h3>23azo</h3>
-                <p>Juegos emocionantes con un enfoque en acción y desafíos rápidos.</p>
-            </div>
-            <div class="game-card" onclick="playGame('wefut')">
-                <h3>WeFUT</h3>
-                <p>Crea y gestiona tu equipo de fútbol en este simulador de FIFA Ultimate Team.</p>
-            </div>
-            <div class="game-card" onclick="playGame('freezenova')">
-                <h3>FreezeNova</h3>
-                <p>Una selección de juegos de acción, aventura y disparos para una experiencia inmersiva.</p>
+            <div class="game-grid">
+                <div class="game-card" onclick="openModal('https://head-soccer.io/head-soccer-2024')">
+                    <h2>Head Soccer 2024</h2>
+                </div>
+                <div class="game-card" onclick="openModal('https://23azo.com')">
+                    <h2>23 Azo</h2>
+                </div>
+                <div class="game-card" onclick="openModal('https://slope2.online')">
+                    <h2>Slope</h2>
+                </div>
+                <div class="game-card" onclick="openModal('https://wefut.com/')">
+                    <h2>WeFut</h2>
+                </div>
             </div>
         </div>
-
-        <div class="proxy-section">
-            <h3>Proxy Integrado</h3>
-            <iframe class="proxy-iframe" src="https://use.gurdit.com/" title="Proxy"></iframe>
-        </div>
-
-        <div class="ai-section">
-            <h3>IA</h3>
-            <div class="ai-input-container">
-                <input type="text" class="ai-input" id="ai-input" placeholder="Pregunta algo...">
-                <button class="ai-send-button" id="ai-send">Enviar</button>
-            </div>
-            <div class="ai-response" id="ai-response" style="display: none;"></div>
-        </div>
-
-        <div class="code-input-section">
-            <input type="text" class="code-input" id="code-input" placeholder="Introduce el código">
-        </div>
-
-        <div class="footer">
-            <p class="signature">games.88, todos los derechos reservados</p>
+        <div id="ai-section" class="ai-section">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Pregunta algo" onkeypress="if(event.key === 'Enter') sendQuestion()">
+            <div id="aiResponse" class="ai-response"></div>
         </div>
     </div>
-
-    <div id="game-container">
-        <button id="fullscreen-game">Pantalla completa</button>
-        <button id="close-game">Cerrar</button>
-        <iframe id="game-iframe" src=""></iframe>
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-buttons">
+                <button onclick="closeModal()">Cerrar</button>
+                <button onclick="goFullscreen()">Pantalla Completa</button>
+            </div>
+            <iframe id="gameIframe" src=""></iframe>
+        </div>
     </div>
-
-    <div id="notification" class="notification"></div>
-
-    <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const hamburger = document.getElementById('hamburger');
+            sidebar.classList.toggle('open');
+            content.classList.toggle('shifted');
+            hamburger.classList.toggle('open');
         }
-        function loadFileData(filename) {
-            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-                try {
-                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                    var firstSheetName = workbook.SheetNames[0];
-                    var worksheet = workbook.Sheets[firstSheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                    var filteredData = jsonData.filter(row => row.some(filledCell));
-                    var headerRowIndex = filteredData.findIndex((row, index) =>
-                      row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                    );
-                    if (headerRowIndex === -1 || headerRowIndex > 25) {
-                      headerRowIndex = 0;
-                    }
-                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                    return csv;
-                } catch (e) {
-                    console.error(e);
-                    return "";
-                }
-            }
-            return gk_fileData[filename] || "";
-        }
-
-        // Clock functionality
-        function updateClock() {
-            const clockElement = document.getElementById('clock');
-            const now = new Date().toLocaleTimeString('es-ES', {
-                timeZone: 'Europe/Madrid',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            clockElement.textContent = now;
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        // Clock menu toggle
-        const clock = document.getElementById('clock');
-        const clockMenu = document.getElementById('clock-menu');
-        const closeMenu = document.getElementById('close-menu');
-
-        clock.addEventListener('click', () => {
-            clockMenu.classList.toggle('active');
-        });
-
-        closeMenu.addEventListener('click', () => {
-            clockMenu.classList.remove('active');
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!clockMenu.contains(event.target) && !clock.contains(event.target)) {
-                clockMenu.classList.remove('active');
-            }
-        });
-
-        // Stopwatch functionality
-        let stopwatchInterval = null;
-        let stopwatchTime = 0;
-        const stopwatchDisplay = document.getElementById('stopwatch-display');
-        const stopwatchStart = document.getElementById('stopwatch-start');
-        const stopwatchStop = document.getElementById('stopwatch-stop');
-        const stopwatchReset = document.getElementById('stopwatch-reset');
-        const notification = document.getElementById('notification');
-
-        function updateStopwatch() {
-            stopwatchTime += 10;
-            const hours = Math.floor(stopwatchTime / 3600000);
-            const minutes = Math.floor((stopwatchTime % 3600000) / 60000);
-            const seconds = Math.floor((stopwatchTime % 60000) / 1000);
-            const milliseconds = stopwatchTime % 1000;
-            stopwatchDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-        }
-
-        stopwatchStart.addEventListener('click', () => {
-            if (!stopwatchInterval) {
-                stopwatchInterval = setInterval(updateStopwatch, 10);
-                stopwatchStart.disabled = true;
-                stopwatchStop.disabled = false;
-            }
-        });
-
-        stopwatchStop.addEventListener('click', () => {
-            if (stopwatchInterval) {
-                clearInterval(stopwatchInterval);
-                stopwatchInterval = null;
-                stopwatchStart.disabled = false;
-                stopwatchStop.disabled = true;
-                const seconds = Math.floor((stopwatchTime % 60000) / 1000);
-                const milliseconds = stopwatchTime % 1000;
-                if (seconds === 10 && milliseconds === 0) {
-                    notification.textContent = '¡En el blanco!';
-                    notification.classList.add('active');
-                    setTimeout(() => {
-                        notification.classList.remove('active');
-                    }, 3000);
-                }
-            }
-        });
-
-        stopwatchReset.addEventListener('click', () => {
-            clearInterval(stopwatchInterval);
-            stopwatchInterval = null;
-            stopwatchTime = 0;
-            stopwatchDisplay.textContent = '00:00:00.000';
-            stopwatchStart.disabled = false;
-            stopwatchStop.disabled = true;
-        });
-
-        // Timer functionality
-        let timerInterval = null;
-        let timerTime = 0;
-        const timerDisplay = document.getElementById('timer-display');
-        const timerMinutes = document.getElementById('timer-minutes');
-        const timerSeconds = document.getElementById('timer-seconds');
-        const timerStart = document.getElementById('timer-start');
-        const timerPause = document.getElementById('timer-pause');
-        const timerReset = document.getElementById('timer-reset');
-
-        function updateTimer() {
-            if (timerTime <= 0) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                timerDisplay.textContent = '00:00';
-                timerStart.disabled = false;
-                timerPause.disabled = true;
-                alert('¡Temporizador finalizado!');
-                return;
-            }
-            timerTime -= 1000;
-            const minutes = Math.floor(timerTime / 60000);
-            const seconds = Math.floor((timerTime % 60000) / 1000);
-            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        timerStart.addEventListener('click', () => {
-            if (!timerInterval) {
-                const minutes = parseInt(timerMinutes.value) || 0;
-                const seconds = parseInt(timerSeconds.value) || 0;
-                timerTime = (minutes * 60 + seconds) * 1000;
-                if (timerTime > 0) {
-                    timerInterval = setInterval(updateTimer, 1000);
-                    timerStart.disabled = true;
-                    timerPause.disabled = false;
-                    timerMinutes.disabled = true;
-                    timerSeconds.disabled = true;
-                }
-            }
-        });
-
-        timerPause.addEventListener('click', () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                timerStart.disabled = false;
-                timerPause.disabled = true;
-            }
-        });
-
-        timerReset.addEventListener('click', () => {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerTime = 0;
-            timerDisplay.textContent = '00:00';
-            timerStart.disabled = false;
-            timerPause.disabled = true;
-            timerMinutes.disabled = false;
-            timerSeconds.disabled = false;
-            timerMinutes.value = '0';
-            timerSeconds.value = '0';
-        });
-
-        // Falling dots animation
-        const canvas = document.getElementById('dots-overlay');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const dots = [];
-        for (let i = 0; i < 100; i++) {
-            dots.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * -canvas.height,
-                speed: Math.random() * 2 + 1,
-                delay: Math.random() * 5
-            });
-        }
-
-        function animateDots() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dots.forEach(dot => {
-                ctx.beginPath();
-                ctx.arc(dot.x, dot.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                dot.y += dot.speed;
-                if (dot.y > canvas.height) {
-                    dot.y = -10;
-                    dot.x = Math.random() * canvas.width;
-                }
-            });
-            requestAnimationFrame(animateDots);
-        }
-        animateDots();
-
-        // Page loading
-        const pageUrls = {
-            'azgames': 'https://azgames.io/',
-            'minecraft': 'https://d1tm91r4ytbt54.cloudfront.net/2779cbcb-a02f-48a3-9e2e-95a8d123d165/1685483461665/web/index.html',
-            'easyfun': 'https://www.easyfun.gg/',
-            '23azo': 'https://23azo.com/',
-            'wefut': 'https://wefut.com/',
-            'freezenova': 'https://freezenova.com/'
-        };
-
-        function playGame(page) {
-            const gameContainer = document.getElementById('game-container');
-            const gameIframe = document.getElementById('game-iframe');
-            const url = pageUrls[page] || '';
-            
-            if (url) {
-                gameIframe.src = url;
-                gameContainer.style.display = 'flex';
-                gameContainer.classList.add('active');
+        function showSection(section) {
+            const gamesSection = document.getElementById('games-section');
+            const aiSection = document.getElementById('ai-section');
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
+            sidebarLinks.forEach(link => link.classList.remove('active'));
+            if (section === 'games') {
+                gamesSection.style.display = 'block';
+                aiSection.style.display = 'none';
+                sidebarLinks[0].classList.add('active');
             } else {
-                alert(`La página ${page} no está disponible. ¡Prueba otra!`);
+                gamesSection.style.display = 'none';
+                aiSection.style.display = 'flex';
+                sidebarLinks[1].classList.add('active');
+            }
+            toggleSidebar();
+        }
+        function openModal(url) {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            iframe.src = url;
+            modal.style.display = 'flex';
+        }
+        function closeModal() {
+            const modal = document.getElementById('gameModal');
+            const iframe = document.getElementById('gameIframe');
+            modal.style.display = 'none';
+            iframe.src = '';
+        }
+        function goFullscreen() {
+            const iframe = document.getElementById('gameIframe');
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.mozRequestFullScreen) {
+                iframe.mozRequestFullScreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) {
+                iframe.msRequestFullscreen();
             }
         }
-
-        // Close game container
-        document.getElementById('close-game').addEventListener('click', () => {
-            const gameContainer = document.getElementById('game-container');
-            const gameIframe = document.getElementById('game-iframe');
-            gameContainer.classList.remove('active');
-            setTimeout(() => {
-                gameContainer.style.display = 'none';
-                gameIframe.src = '';
-            }, 300);
-        });
-
-        // Fullscreen button
-        document.getElementById('fullscreen-game').addEventListener('click', () => {
-            const gameIframe = document.getElementById('game-iframe');
-            if (gameIframe.requestFullscreen) {
-                gameIframe.requestFullscreen();
-            } else if (gameIframe.mozRequestFullScreen) {
-                gameIframe.mozRequestFullScreen();
-            } else if (gameIframe.webkitRequestFullscreen) {
-                gameIframe.webkitRequestFullscreen();
-            } else if (gameIframe.msRequestFullscreen) {
-                gameIframe.msRequestFullscreen();
-            }
-        });
-
-        // Resize canvas on window resize
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        // Code input and notification functionality
-        const codeInput = document.getElementById('code-input');
-        codeInput.addEventListener('input', () => {
-            const inputValue = codeInput.value.trim().toLowerCase();
-            if (inputValue === 'paul.88') {
-                notification.textContent = '¡Logro desbloqueado: Código secreto encontrado!';
-                notification.classList.add('active');
-                setTimeout(() => {
-                    notification.classList.remove('active');
-                }, 3000);
-                codeInput.value = '';
-            }
-        });
-
-        // AI Assistant functionality
-        const aiInput = document.getElementById('ai-input');
-        const aiSendButton = document.getElementById('ai-send');
-        const aiResponse = document.getElementById('ai-response');
-
-        function getAIResponse(query) {
-            query = query.toLowerCase().trim();
-
-            // Game-specific queries
-            if (query.includes('juego') || query.includes('game') || query.includes('jugar')) {
-                if (query.includes('minecraft')) {
-                    return 'Minecraft es un juego sandbox donde puedes construir, explorar y sobrevivir en un mundo generado aleatoriamente. En Games.88, haz clic en la tarjeta "Minecraft" en la sección de juegos para jugar directamente en tu navegador.';
-                } else if (query.includes('azgames')) {
-                    return 'AZGames.io ofrece una colección de juegos en línea como .io, clicker y carreras. Son ideales para sesiones rápidas. Selecciona la tarjeta "AZGames.io" en la sección de juegos para empezar.';
-                } else if (query.includes('easyfun')) {
-                    return 'EasyFun.gg proporciona juegos divertidos y accesibles para todas las edades, desde puzzles hasta aventuras casuales. Haz clic en la tarjeta "EasyFun.gg" en la sección de juegos para explorar.';
-                } else if (query.includes('23azo')) {
-                    return '23azo se especializa en juegos de acción y desafíos rápidos, perfectos para partidas emocionantes. Encuentra la tarjeta "23azo" en la sección de juegos para jugar.';
-                } else if (query.includes('wefut')) {
-                    return 'WeFUT es un simulador de FIFA Ultimate Team donde puedes crear y gestionar tu equipo de fútbol ideal. Selecciona la tarjeta "WeFUT" en la sección de juegos para empezar.';
-                } else if (query.includes('freezenova')) {
-                    return 'FreezeNova ofrece juegos de acción, aventura y disparos con una experiencia inmersiva. Haz clic en la tarjeta "FreezeNova" en la sección de juegos para disfrutar.';
-                } else if (query.includes('lista') || query.includes('disponibles') || query.includes('todos')) {
-                    return 'Games.88 incluye los siguientes juegos: Minecraft (sandbox creativo), AZGames.io (.io y clicker), EasyFun.gg (juegos casuales), 23azo (acción rápida), WeFUT (simulador de fútbol) y FreezeNova (acción y aventura). Haz clic en las tarjetas de la sección de juegos para jugar.';
-                } else if (query.includes('cómo') || query.includes('como')) {
-                    return 'Para jugar, haz clic en la tarjeta del juego que prefieras en la sección de juegos. Esto abrirá el juego en una ventana emergente. Usa el botón "Pantalla completa" para una mejor experiencia o "Cerrar" para volver al menú.';
-                } else {
-                    return 'Games.88 ofrece una variedad de juegos como Minecraft, AZGames.io, EasyFun.gg, 23azo, WeFUT y FreezeNova. Selecciona cualquier tarjeta en la sección de juegos para empezar. ¿Quieres información sobre un juego específico?';
+        function levenshtein(a, b) {
+            const matrix = Array(b.length + 1).fill().map(() => Array(a.length + 1).fill(0));
+            for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+            for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+            for (let j = 1; j <= b.length; j++) {
+                for (let i = 1; i <= a.length; i++) {
+                    const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+                    matrix[j][i] = Math.min(
+                        matrix[j][i - 1] + 1,
+                        matrix[j - 1][i] + 1,
+                        matrix[j - 1][i - 1] + indicator
+                    );
                 }
             }
-
-            // Site feature queries
-            if (query.includes('cronómetro') || query.includes('stopwatch')) {
-                if (query.includes('cómo') || query.includes('usar')) {
-                    return 'Para usar el cronómetro, haz clic en el reloj en la esquina superior izquierda para abrir el menú. En la sección "Cronómetro", usa "Iniciar" para comenzar, "Pausar" para detener y "Reiniciar" para volver a cero. ¡Intenta parar exactamente en 10 segundos para un logro!';
-                } else {
-                    return 'El cronómetro está en el menú del reloj (esquina superior izquierda). Haz clic en el reloj, selecciona "Cronómetro" y usa los botones "Iniciar", "Pausar" o "Reiniciar".';
-                }
-            }
-            if (query.includes('temporizador') || query.includes('timer')) {
-                if (query.includes('cómo') || query.includes('usar')) {
-                    return 'Para usar el temporizador, haz clic en el reloj en la esquina superior izquierda. En la sección "Temporizador", ingresa los minutos y segundos, luego presiona "Iniciar". Puedes pausar con "Pausar" o reiniciar con "Reiniciar". Recibirás una alerta cuando termine.';
-                } else {
-                    return 'El temporizador está en el menú del reloj (esquina superior izquierda). Ingresa minutos y segundos, luego usa los botones "Iniciar", "Pausar" o "Reiniciar".';
-                }
-            }
-            if (query.includes('proxy')) {
-                if (query.includes('qué') || query.includes('es')) {
-                    return 'El proxy integrado de Games.88, ubicado en la sección "Proxy Integrado" arriba de esta sección, te permite navegar de forma segura y acceder a contenido restringido. Usa el iframe para explorar sitios externos.';
-                } else if (query.includes('cómo') || query.includes('usar')) {
-                    return 'El proxy está en la sección "Proxy Integrado" arriba. Ingresa la URL que deseas visitar en el iframe para navegar de forma segura. Es ideal para acceder a sitios bloqueados o proteger tu privacidad.';
-                } else {
-                    return 'El proxy integrado está en la sección "Proxy Integrado" justo arriba. Úsalo para navegar de forma segura en el iframe proporcionado.';
-                }
-            }
-            if (query.includes('código') || query.includes('code')) {
-                if (query.includes('qué') || query.includes('es')) {
-                    return 'La sección "Introduce el código" debajo de esta sección te permite ingresar códigos para desbloquear logros. Por ejemplo, prueba "paul.88" para desbloquear un logro especial.';
-                } else if (query.includes('cómo') || query.includes('usar')) {
-                    return 'En la sección "Introduce el código" debajo, escribe un código como "paul.88" y observa si desbloqueas un logro. Los códigos deben ingresarse exactamente como se proporcionan.';
-                } else {
-                    return 'Usa la sección "Introduce el código" debajo para ingresar códigos. Prueba "paul.88" para desbloquear un logro secreto.';
-                }
-            }
-
-            // Time and date queries
-            if (query.includes('hora') || query.includes('time')) {
-                const now = new Date().toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                return `La hora actual en Madrid es ${now} (CEST, 30 de mayo de 2025).`;
-            }
-            if (query.includes('fecha') || query.includes('date') || query.includes('día') || query.includes('day')) {
-                const date = new Date().toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                return `Hoy es ${date}.`;
-            }
-
-            // General knowledge queries
-            if (query.includes('quién') || query.includes('quien')) {
-                if (query.includes('creó') || query.includes('creador') || query.includes('hizo') || query.includes('desarrolló')) {
-                    if (query.includes('minecraft')) {
-                        return 'Minecraft fue creado por Markus Persson (Notch) y desarrollado por Mojang Studios. En Games.88, puedes jugar una versión en navegador haciendo clic en la tarjeta "Minecraft".';
-                    } else if (query.includes('games.88')) {
-                        return 'Games.88 fue creado por un equipo de desarrolladores dedicados a ofrecer una plataforma de juegos minimalista y accesible para todos.';
-                    } else {
-                        return 'Por favor, especifica de quién hablas. Por ejemplo, "¿Quién creó Games.88?" o "¿Quién creó Minecraft?".';
-                    }
-                } else if (query.includes('es')) {
-                    if (query.includes('elon musk')) {
-                        return 'Elon Musk es un empresario e inventor, CEO de empresas como Tesla, SpaceX y xAI. Es conocido por sus contribuciones a la tecnología y la exploración espacial.';
-                    } else if (query.includes('albert einstein')) {
-                        return 'Albert Einstein fue un físico teórico de origen alemán, famoso por desarrollar la teoría de la relatividad, incluyendo la ecuación E=mc².';
-                    } else {
-                        return 'Especifica de quién hablas, por ejemplo, "¿Quién es Elon Musk?" o "¿Quién es Albert Einstein?".';
-                    }
-                } else {
-                    return 'Por favor, especifica de quién hablas. Por ejemplo, "¿Quién creó Games.88?" o "¿Quién es Albert Einstein?".';
-                }
-            }
-            if (query.includes('qué') || query.includes('que')) {
-                if (query.includes('es games.88') || query.includes('es este sitio') || query.includes('es esta página')) {
-                    return 'Games.88 es una plataforma minimalista diseñada para disfrutar de juegos en línea como Minecraft, AZGames.io, EasyFun.gg, 23azo, WeFUT y FreezeNova. Incluye un proxy integrado, un cronómetro, un temporizador y un sistema de códigos para logros.';
-                } else if (query.includes('es un proxy') || query.includes('es proxy')) {
-                    return 'Un proxy es un servidor que actúa como intermediario para navegar por internet de forma segura o acceder a contenido restringido. En Games.88, el proxy integrado está en la sección "Proxy Integrado" para navegar desde el iframe.';
-                } else if (query.includes('es minecraft')) {
-                    return 'Minecraft es un juego sandbox donde construyes, exploras y sobrevives en un mundo de bloques. En Games.88, haz clic en la tarjeta "Minecraft" para jugar en tu navegador.';
-                } else if (query.includes('es la capital') || query.includes('capital de')) {
-                    const countryMatch = query.match(/capital de (\w+)/);
-                    if (countryMatch) {
-                        const country = countryMatch[1].toLowerCase();
-                        const capitals = {
-                            'españa': 'Madrid',
-                            'francia': 'París',
-                            'italia': 'Roma',
-                            'alemania': 'Berlín',
-                            'japón': 'Tokio',
-                            'estados unidos': 'Washington D.C.',
-                            'brasil': 'Brasilia'
-                        };
-                        return capitals[country] ? `La capital de ${country.charAt(0).toUpperCase() + country.slice(1)} es ${capitals[country]}.` : 'No tengo información sobre ese país. Prueba con otro, como "¿Cuál es la capital de España?".';
-                    }
-                } else if (query.includes('es el significado') || query.includes('significa')) {
-                    const wordMatch = query.match(/significa (\w+)/);
-                    if (wordMatch) {
-                        const word = wordMatch[1].toLowerCase();
-                        const meanings = {
-                            'libertad': 'La libertad es el estado de poder actuar, hablar o pensar sin restricciones indebidas, respetando los derechos de los demás.',
-                            'amor': 'El amor es un sentimiento intenso de afecto, cuidado o atracción hacia una persona, cosa o idea.',
-                            'tecnología': 'La tecnología es el conjunto de conocimientos, herramientas y métodos usados para crear bienes o servicios.'
-                        };
-                        return meanings[word] ? `El significado de "${word}" es: ${meanings[word]}` : 'No tengo el significado de esa palabra. Prueba con otra, como "¿Qué significa libertad?".';
-                    }
-                } else {
-                    return '¿Qué quieres saber? Prueba con "¿Qué es Games.88?", "¿Qué es un proxy?" o "¿Qué es la capital de Francia?".';
-                }
-            }
-            if (query.includes('cómo') || query.includes('como')) {
-                if (query.includes('pantalla completa') || query.includes('fullscreen')) {
-                    return 'Para jugar en pantalla completa, selecciona un juego en la sección de juegos, luego haz clic en el botón "Pantalla completa" en la ventana del juego.';
-                } else if (query.includes('cerrar') || query.includes('salir')) {
-                    return 'Para cerrar un juego, haz clic en el botón "Cerrar" en la ventana del juego. Para cerrar el menú del reloj, usa el botón "Cerrar" en el menú.';
-                } else if (query.includes('hacer un pastel') || query.includes('cocinar')) {
-                    return 'Para hacer un pastel básico, necesitarás: 2 tazas de harina, 1 taza de azúcar, 2 huevos, 1/2 taza de mantequilla, 1 taza de leche, 2 cucharaditas de polvo de hornear y esencia de vainilla. Mezcla los ingredientes secos, agrega los húmedos, bate hasta obtener una masa homogénea, vierte en un molde engrasado y hornea a 180°C por 30-35 minutos. ¡Déjalo enfriar y decora!';
-                } else if (query.includes('aprender a programar')) {
-                    return 'Para aprender a programar, empieza con un lenguaje como Python por su simplicidad. Usa plataformas como Codecademy o freeCodeCamp, practica proyectos pequeños y lee documentación. La clave es la constancia y resolver problemas reales.';
-                } else {
-                    return '¿Cómo puedo ayudarte? Por ejemplo, pregunta "¿Cómo juego a Minecraft?", "¿Cómo uso el temporizador?" o "¿Cómo hacer un pastel?".';
-                }
-            }
-            if (query.includes('cuál') || query.includes('cual')) {
-                if (query.includes('mejor juego') || query.includes('juego favorito')) {
-                    return 'Todos los juegos en Games.88 son geniales, pero depende de tus gustos: Minecraft para creatividad, AZGames.io para partidas rápidas, EasyFun.gg para diversión casual, 23azo para acción, WeFUT para fútbol, o FreezeNova para aventuras intensas. ¿Cuál prefieres probar?';
-                } else if (query.includes('es el mejor lenguaje de programación')) {
-                    return 'El "mejor" lenguaje de programación depende de tu objetivo. Python es ideal para principiantes y ciencia de datos, JavaScript para desarrollo web, C++ para rendimiento en juegos, y Java para aplicaciones empresariales. ¿Qué quieres crear?';
-                } else {
-                    return '¿Cuál quieres saber? Por ejemplo, pregunta "¿Cuál es el mejor juego?" o "¿Cuál es el mejor lenguaje de programación?".';
-                }
-            }
-
-            // Math and calculation queries
-            if (query.match(/(\d+\s*[\+\-\*\/]\s*\d+)/)) {
-                try {
-                    const expression = query.match(/(\d+\s*[\+\-\*\/]\s*\d+)/)[0];
-                    const result = eval(expression); // Note: eval is used for simplicity; in production, use a safer parser like math.js
-                    return `El resultado de ${expression} es ${result}.`;
-                } catch (e) {
-                    return 'No pude calcular eso. Asegúrate de escribir una expresión matemática válida, como "2 + 3" o "5 * 4".';
-                }
-            }
-
-            // Science and technology queries
-            if (query.includes('planeta') || query.includes('sistema solar')) {
-                if (query.includes('cuántos planetas') || query.includes('numero de planetas')) {
-                    return 'El sistema solar tiene 8 planetas: Mercurio, Venus, Tierra, Marte, Júpiter, Saturno, Urano y Neptuno.';
-                } else if (query.includes('mayor planeta') || query.includes('planeta más grande')) {
-                    return 'Júpiter es el planeta más grande del sistema solar, con un diámetro de aproximadamente 139,820 km.';
-                } else {
-                    return 'El sistema solar incluye 8 planetas, el Sol, lunas, asteroides y cometas. ¿Quieres saber algo específico, como "¿Cuántos planetas hay?" o "¿Cuál es el planeta más grande?".';
-                }
-            }
-            if (query.includes('tecnología') || query.includes('tecnologia')) {
-                if (query.includes('qué es ia') || query.includes('inteligencia artificial')) {
-                    return 'La inteligencia artificial (IA) es una rama de la informática que desarrolla sistemas capaces de realizar tareas que requieren inteligencia humana, como aprender, razonar o responder preguntas. Yo soy un ejemplo de IA, creado para ayudarte en Games.88.';
-                } else {
-                    return 'La tecnología abarca herramientas, sistemas y métodos para resolver problemas. ¿Quieres saber sobre algo específico, como "¿Qué es la inteligencia artificial?"?';
-                }
-            }
-
-            // History and culture queries
-            if (query.includes('historia') || query.includes('history')) {
-                if (query.includes('segunda guerra mundial')) {
-                    return 'La Segunda Guerra Mundial (1939-1945) fue un conflicto global entre las potencias del Eje (Alemania, Japón, Italia) y los Aliados (EE.UU., Reino Unido, URSS, entre otros). Comenzó con la invasión de Polonia por Alemania y terminó con la rendición de Japón tras los bombardeos atómicos de Hiroshima y Nagasaki.';
-                } else {
-                    return 'La historia cubre eventos, personas y culturas del pasado. ¿Quieres saber sobre algo específico, como "¿Qué pasó en la Segunda Guerra Mundial?"?';
-                }
-            }
-
-            // Conversational queries
-            if (query.includes('hola') || query.includes('hey') || query.includes('saludo')) {
-                return '¡Hola! Bienvenido a Games.88. Estoy listo para responder cualquier pregunta, desde juegos hasta ciencia o historia. ¿Qué tienes en mente? 😊';
-            }
-            if (query.includes('gracias') || query.includes('thank')) {
-                return '¡De nada! Estoy aquí para ayudarte con cualquier duda o curiosidad. ¿Qué más quieres saber?';
-            }
-            if (query.includes('cómo estás') || query.includes('como estás') || query.includes('how are you')) {
-                return '¡Estoy genial, gracias por preguntar! Soy una IA lista para ayudarte con cualquier tema, desde Games.88 hasta el universo. ¿Qué quieres explorar?';
-            }
-            if (query.includes('quién eres') || query.includes('quien eres') || query.includes('who are you')) {
-                return 'Soy una IA avanzada en Games.88, inspirada en sistemas como Grok de xAI. Puedo responder sobre juegos, ciencia, historia, matemáticas o cualquier cosa que te intrigue. ¡Pregúntame lo que sea!';
-            }
-
-            // Fallback for unrecognized queries
-            return 'No estoy seguro de cómo responder a eso. Prueba con algo como "¿Qué juegos hay?", "¿Qué hora es?", "¿Cuál es la capital de Francia?" o incluso "¿Cómo hacer un pastel?". ¡Estoy listo para cualquier pregunta!';
+            return matrix[b.length][a.length];
         }
-
-        aiSendButton.addEventListener('click', () => {
-            const query = aiInput.value;
-            if (query) {
-                const response = getAIResponse(query);
-                aiResponse.textContent = response;
-                aiResponse.style.display = 'block';
-                aiInput.value = '';
+        function keywordMatch(input, keywords) {
+            const inputWords = input.toLowerCase().split(/\s+/);
+            return keywords.some(keyword => inputWords.includes(keyword.toLowerCase()));
+        }
+        const knowledgeBase = [
+            { question: "quién creó esta página", answer: "Esta página fue creada por Ivooubi.", keywords: ["creó", "creador", "hizo", "pagina", "web", "ubgames"] },
+            { question: "quien hizo esta web", answer: "Ivooubi es el creador de esta web.", keywords: ["hizo", "creador", "web", "ubgames"] },
+            { question: "creador de ubgames", answer: "El creador de UBGames.88 es Ivooubi.", keywords: ["creador", "ubgames"] },
+            { question: "cuándo se creó esta página", answer: "Esta página se creó el 14/6/2025.", keywords: ["creó", "cuando", "fecha", "pagina", "web"] },
+            { question: "fecha de creación de esta página", answer: "UBGames.88 fue creada el 14 de junio de 2025.", keywords: ["fecha", "creacion", "pagina"] },
+            { question: "qué es esta página", answer: "Esta página es una web de juegos desbloqueados gratuitos para divertirte sin límites.", keywords: ["que", "es", "pagina", "web", "ubgames"] },
+            { question: "qué es ubgames", answer: "UBGames.88 es una web con juegos gratuitos y una sección de IA interactiva para responder tus preguntas.", keywords: ["que", "es", "ubgames"] },
+            { question: "qué juegos hay en esta página", answer: "UBGames.88 ofrece Head Soccer 2024, 23 Azo, Slope y WeFut, todos accesibles desde la sección de Juegos.", keywords: ["juegos", "hay", "pagina", "ubgames"] },
+            { question: "cómo jugar en esta página", answer: "En la sección de Juegos, haz clic en un juego para abrirlo en una ventana. Usa los botones 'Cerrar' o 'Pantalla Completa' para controlar la experiencia.", keywords: ["jugar", "como", "pagina", "juegos"] },
+            { question: "qué hace la sección de ia", answer: "La sección de IA te permite hacer preguntas sobre cualquier tema, ¡y yo te respondo como un asistente inteligente!", keywords: ["ia", "seccion", "que", "hace"] },
+            { question: "cómo usar la ia", answer: "En la sección de IA, escribe tu pregunta en el campo 'Pregunta algo' y presiona Enter. La respuesta aparecerá justo debajo.", keywords: ["usar", "ia", "como"] },
+            { question: "por qué se llama ubgames.88", answer: "El nombre UBGames.88 refleja una plataforma de juegos desbloqueados (UnBlocked) con un toque moderno y único.", keywords: ["por", "que", "ubgames", "nombre"] },
+            { question: "puedo jugar gratis", answer: "¡Sí! Todos los juegos en UBGames.88 son gratuitos y desbloqueados para que disfrutes sin restricciones.", keywords: ["jugar", "gratis", "puedo"] },
+            { question: "qué ofrece ubgames", answer: "UBGames.88 ofrece juegos desbloqueados gratuitos como Head Soccer 2024, 23 Azo, Slope y WeFut, además de una IA para responder preguntas.", keywords: ["ofrece", "ubgames", "que"] },
+            { question: "cómo funciona esta página", answer: "UBGames.88 tiene una sección de juegos donde puedes jugar títulos desbloqueados y una sección de IA para responder preguntas. Usa el menú para navegar.", keywords: ["funciona", "pagina", "como"] },
+            { question: "hola", answer: "¡Hola! Bienvenido a UBGames.88. ¿Quieres jugar o preguntarme algo?", keywords: ["hola"] },
+            { question: "qué tal", answer: "¡Genial, gracias! ¿Listo para explorar los juegos o charlar con la IA?", keywords: ["que", "tal"] },
+            { question: "cómo estás", answer: "¡Súper, gracias por preguntar! ¿Quieres saber más sobre UBGames.88 o algo más?", keywords: ["como", "estas"] },
+            { question: "hola cómo estás", answer: "¡Hola! Estoy genial, listo para ayudarte en UBGames.88. ¿Y tú?", keywords: ["hola", "como", "estas"] },
+            { question: "qué haces", answer: "Estoy aquí en UBGames.88, respondiendo preguntas y ayudando con los juegos. ¿Qué quieres hacer?", keywords: ["que", "haces"] },
+            { question: "cuéntame un chiste", answer: "¡Vale! ¿Por qué el astronauta rompió con su pareja? Porque necesitaba espacio.", keywords: ["chiste", "cuentame"] },
+            { question: "qué es el sol", answer: "El Sol es una estrella que ilumina y calienta nuestro sistema solar, esencial para la vida en la Tierra.", keywords: ["sol", "que", "es"] },
+            { question: "cómo funciona un coche", answer: "Un coche usa un motor para convertir energía (gasolina o electricidad) en movimiento, impulsando las ruedas a través de una transmisión.", keywords: ["coche", "funciona", "como"] },
+            { question: "quién es einstein", answer: "Albert Einstein, físico alemán, creador de la relatividad y la famosa ecuación E=mc².", keywords: ["einstein", "quien"] },
+            { question: "qué es la gravedad", answer: "La gravedad es la fuerza que atrae objetos con masa, como la que mantiene a los planetas orbitando el Sol.", keywords: ["gravedad", "que", "es"] },
+            { question: "cómo se hace un pastel", answer: "Mezcla harina, azúcar, huevos, mantequilla, levadura y vainilla, luego hornea a 180°C por 25-35 minutos.", keywords: ["pastel", "como", "hace"] },
+            { question: "qué es internet", answer: "Internet es una red global de computadoras que permite compartir información usando protocolos como TCP/IP.", keywords: ["internet", "que", "es"] },
+            { question: "por qué llueve", answer: "Llueve cuando el vapor de agua en las nubes se condensa y cae por la gravedad.", keywords: ["llueve", "por", "que"] },
+            { question: "qué es un virus", answer: "Un virus es un microorganismo que infecta células para reproducirse, causando a veces enfermedades.", keywords: ["virus", "que", "es"] },
+            { question: "cómo volar un avión", answer: "Volar un avión implica controlar superficies de vuelo y motor, siguiendo instrumentos de navegación.", keywords: ["avion", "volar", "como"] },
+            { question: "qué es el amor", answer: "El amor es una emoción de afecto y conexión hacia personas, cosas o ideas.", keywords: ["amor", "que", "es"] },
+            { question: "qué es la luna", answer: "La Luna es el satélite natural de la Tierra, que afecta las mareas y orbita nuestro planeta.", keywords: ["luna", "que", "es"] },
+            { question: "cómo funciona la electricidad", answer: "La electricidad es el flujo de electrones por un conductor, generado por una diferencia de voltaje.", keywords: ["electricidad", "funciona", "como"] },
+            { question: "quién inventó el teléfono", answer: "Alexander Graham Bell inventó el teléfono en 1876.", keywords: ["telefono", "invento", "quien"] },
+            { question: "qué es un dinosaurio", answer: "Los dinosaurios fueron reptiles prehistóricos, como el T-Rex, que vivieron hace millones de años.", keywords: ["dinosaurio", "que", "es"] },
+            { question: "cómo se forma un arcoíris", answer: "Un arcoíris se forma por la refracción y reflexión de la luz solar en gotas de agua.", keywords: ["arcoiris", "forma", "como"] },
+            { question: "qué hora es", answer: "Son las 21:11 CEST, sábado 14 de junio de 2025. ¿Qué más quieres saber?", keywords: ["hora", "que", "es"] },
+            { question: "cuál es la capital de españa", answer: "La capital de España es Madrid.", keywords: ["capital", "españa", "cual"] },
+            { question: "por qué el cielo es azul", answer: "El cielo es azul por la dispersión de Rayleigh, que dispersa más la luz azul del Sol.", keywords: ["cielo", "azul", "por", "que"] },
+            { question: "qué es la fotosíntesis", answer: "La fotosíntesis es el proceso de las plantas para convertir luz solar, agua y CO₂ en glucosa y oxígeno.", keywords: ["fotosintesis", "que", "es"] },
+            { question: "quién escribió don quijote", answer: "Miguel de Cervantes escribió 'Don Quijote de la Mancha'.", keywords: ["don", "quijote", "escribio", "quien"] },
+            { question: "cómo se hace el café", answer: "Muele granos de café tostados, mezcla con agua caliente y filtra para obtener la bebida.", keywords: ["cafe", "hace", "como"] },
+            { question: "qué es el cambio climático", answer: "El cambio climático es el cambio a largo plazo en los patrones climáticos, a menudo por actividades humanas.", keywords: ["cambio", "climatico", "que", "es"] },
+            { question: "qué es la inteligencia artificial", answer: "La IA es la simulación de inteligencia humana por máquinas, como la que uso para responderte en UBGames.88.", keywords: ["inteligencia", "artificial", "que", "es"] },
+            { question: "cómo se juega al fútbol", answer: "El fútbol se juega con dos equipos de 11 jugadores, intentando meter un balón en la portería contraria.", keywords: ["futbol", "juega", "como"] },
+            { question: "qué es el universo", answer: "El universo es todo lo que existe: espacio, tiempo, materia y energía.", keywords: ["universo", "que", "es"] },
+            { question: "por qué los pájaros cantan", answer: "Los pájaros cantan para comunicarse, atraer parejas o marcar territorio.", keywords: ["pajaros", "cantan", "por", "que"] },
+            { question: "qué es un volcán", answer: "Un volcán es una abertura en la Tierra por donde sale magma, cenizas y gases.", keywords: ["volcan", "que", "es"] },
+            { question: "cómo funciona un cohete", answer: "Un cohete expulsa gases a alta velocidad para propulsarse, siguiendo la tercera ley de Newton.", keywords: ["cohete", "funciona", "como"] },
+            { question: "quién es leonardo da vinci", answer: "Leonardo da Vinci fue un artista e inventor renacentista, conocido por la Mona Lisa y sus diseños.", keywords: ["leonardo", "da", "vinci", "quien"] },
+            { question: "qué es la evolución", answer: "La evolución es el cambio en las características de las especies a lo largo de generaciones.", keywords: ["evolucion", "que", "es"] },
+            { question: "cómo se hace una pizza", answer: "Extiende masa, añade salsa de tomate, queso y toppings, luego hornea a 220°C por 10-15 minutos.", keywords: ["pizza", "hace", "como"] },
+            { question: "qué es un agujero negro", answer: "Un agujero negro es una región del espacio con gravedad tan intensa que nada, ni la luz, escapa.", keywords: ["agujero", "negro", "que", "es"] },
+            { question: "por qué dormimos", answer: "Dormimos para descansar el cuerpo, procesar recuerdos y regular funciones biológicas.", keywords: ["dormimos", "por", "que"] },
+            { question: "qué es el adn", answer: "El ADN es una molécula que contiene las instrucciones genéticas de los seres vivos.", keywords: ["adn", "que", "es"] },
+            { question: "cómo funciona un ordenador", answer: "Un ordenador procesa datos usando un CPU, memoria y software, ejecutando instrucciones binarias.", keywords: ["ordenador", "funciona", "como"] },
+            { question: "quién descubrió américa", answer: "Cristóbal Colón es conocido por llegar a América en 1492, aunque otros pueblos ya la habitaban.", keywords: ["america", "descubrio", "quien"] },
+            { question: "qué es la democracia", answer: "La democracia es un sistema donde los ciudadanos eligen a sus gobernantes mediante votaciones.", keywords: ["democracia", "que", "es"] },
+            { question: "cómo se forma el viento", answer: "El viento se forma por diferencias en la presión atmosférica, moviendo el aire de alta a baja presión.", keywords: ["viento", "forma", "como"] },
+            { question: "qué es un tsunami", answer: "Un tsunami es una serie de olas gigantes causadas por desplazamientos en el océano, como terremotos.", keywords: ["tsunami", "que", "es"] },
+            { question: "por qué las estrellas brillan", answer: "Las estrellas brillan por reacciones nucleares en su núcleo que liberan energía como luz.", keywords: ["estrellas", "brillan", "por", "que"] },
+            { question: "qué es la energía solar", answer: "La energía solar es la electricidad o calor generado a partir de la luz del Sol usando paneles solares.", keywords: ["energia", "solar", "que", "es"] },
+            { question: "cómo se hace un libro", answer: "Un libro se hace escribiendo contenido, diseñándolo, imprimiéndolo y encuadernándolo.", keywords: ["libro", "hace", "como"] },
+            { question: "qué es la globalización", answer: "La globalización es la interconexión mundial de economías, culturas y sociedades.", keywords: ["globalizacion", "que", "es"] },
+            { question: "por qué hay guerras", answer: "Las guerras surgen por conflictos de recursos, poder, ideologías o territorios.", keywords: ["guerras", "por", "que"] },
+            { question: "qué es el reciclaje", answer: "El reciclaje es el proceso de reutilizar materiales desechados para crear nuevos productos.", keywords: ["reciclaje", "que", "es"] }
+        ];
+        const fallbackResponses = [
+            "Mmm, no estoy seguro de eso. ¿Puedes preguntar algo más sobre UBGames.88 o cualquier otro tema?",
+            "¡Vaya, esa es nueva! Prueba con otra pregunta, soy todo oídos... o mejor dicho, todo código.",
+            "No pillé esa, pero estoy listo para otra. ¿Quizás algo sobre los juegos de esta página?",
+            "Esa pregunta me despistó. ¿Quieres saber más sobre UBGames.88 o algo diferente?"
+        ];
+        function findClosestQuestion(input) {
+            const normalizedInput = input.toLowerCase().trim().replace(/[¿?¡!.,]/g, '');
+            let minDistance = Infinity;
+            let closestQuestion = null;
+            let keywordMatchEntry = null;
+            // Levenshtein distance matching
+            for (const entry of knowledgeBase) {
+                const normalizedEntry = entry.question.toLowerCase().replace(/[¿?¡!.,]/g, '');
+                const distance = levenshtein(normalizedInput, normalizedEntry);
+                const threshold = Math.min(6, Math.max(3, normalizedEntry.length * 0.3)); // Dynamic threshold
+                if (distance < minDistance && distance <= threshold) {
+                    minDistance = distance;
+                    closestQuestion = entry;
+                }
+                // Keyword matching as fallback
+                if (entry.keywords && keywordMatch(normalizedInput, entry.keywords)) {
+                    keywordMatchEntry = entry;
+                }
             }
-        });
-
-        aiInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && aiInput.value) {
-                const query = aiInput.value;
-                const response = getAIResponse(query);
-                aiResponse.textContent = response;
-                aiResponse.style.display = 'block';
-                aiInput.value = '';
-            }
-        });
-
-        (function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d1e3d4ff90b022',t:'MTc0NjgwMDk3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+            return closestQuestion || keywordMatchEntry || { answer: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)] };
+        }
+        function sendQuestion() {
+            const input = document.getElementById('aiInput');
+            const responseContainer = document.getElementById('aiResponse');
+            const question = input.value.trim();
+            if (!question) return;
+            const response = findClosestQuestion(question);
+            responseContainer.textContent = response.answer;
+            input.value = '';
+        }
     </script>
 </body>
 </html>
