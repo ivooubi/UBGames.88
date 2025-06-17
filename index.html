@@ -45,6 +45,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UBGames.88</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -208,24 +209,50 @@
             padding: 8px 12px;
             font-size: 0.9rem;
             font-family: 'Montserrat', sans-serif;
-            width: 200px;
+            width: 100%;
+            max-width: 400px;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .ai-input::placeholder {
             color: #555;
+        }
+        .ai-suggestion {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+            cursor: pointer;
         }
         .ai-response {
             width: 100%;
             background-color: #1a1a1a;
             border-radius: 8px;
-            padding: 10px;
-            text-align: center;
+            padding: 15px;
+            text-align: left;
             font-size: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            animation: fadeInResponse 0.5s ease-in;
+        }
+        .ai-loading {
+            display: none;
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .ai-error {
+            color: #ff5555;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: none;
         }
         @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(-20px); }
             100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInResponse {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
         @media (max-width: 600px) {
             .sidebar {
@@ -290,7 +317,10 @@
             </div>
         </div>
         <div id="ai-section" class="ai-section">
-            <input type="text" class="ai-input" id="aiInput" placeholder="Pregunta algo" onkeypress="if(event.key === 'Enter') sendQuestion()">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Pregunta algo..." onkeypress="if(event.key === 'Enter') sendQuestion()">
+            <div id="aiSuggestion" class="ai-suggestion"></div>
+            <div id="aiLoading" class="ai-loading">Procesando...</div>
+            <div id="aiError" class="ai-error"></div>
             <div id="aiResponse" class="ai-response"></div>
         </div>
     </div>
@@ -303,7 +333,40 @@
             <iframe id="gameIframe" src=""></iframe>
         </div>
     </div>
-    <script>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        function filledCell(cell) {
+            return cell !== '' && cell != null && cell !== undefined;
+        }
+
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) => 
+                        row.filter(filledCell).length >= (filteredData[index + 1]?.filter(filledCell).length || 0)
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error('Error processing file:', e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
@@ -312,6 +375,7 @@
             content.classList.toggle('shifted');
             hamburger.classList.toggle('open');
         }
+
         function showSection(section) {
             const gamesSection = document.getElementById('games-section');
             const aiSection = document.getElementById('ai-section');
@@ -328,18 +392,21 @@
             }
             toggleSidebar();
         }
+
         function openModal(url) {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
             iframe.src = url;
             modal.style.display = 'flex';
         }
+
         function closeModal() {
             const modal = document.getElementById('gameModal');
             const iframe = document.getElementById('gameIframe');
             modal.style.display = 'none';
             iframe.src = '';
         }
+
         function goFullscreen() {
             const iframe = document.getElementById('gameIframe');
             if (iframe.requestFullscreen) {
@@ -352,6 +419,15 @@
                 iframe.msRequestFullscreen();
             }
         }
+
+        // Enhanced AI Logic
+        let conversationContext = [];
+        const MAX_CONTEXT_LENGTH = 5;
+
+        function normalizeText(text) {
+            return text.toLowerCase().trim().replace(/[¿?¡!.,;]/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
         function levenshtein(a, b) {
             const matrix = Array(b.length + 1).fill().map(() => Array(a.length + 1).fill(0));
             for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
@@ -368,113 +444,222 @@
             }
             return matrix[b.length][a.length];
         }
-        function keywordMatch(input, keywords) {
-            const inputWords = input.toLowerCase().split(/\s+/);
-            return keywords.some(keyword => inputWords.includes(keyword.toLowerCase()));
+
+        function computeTFIDF(query, document) {
+            const queryWords = normalizeText(query).split(/\s+/);
+            const docWords = normalizeText(document).split(/\s+/);
+            const wordSet = new Set([...queryWords, ...docWords]);
+            const tfQuery = {};
+            const tfDoc = {};
+            
+            queryWords.forEach(word => tfQuery[word] = (tfQuery[word] || 0) + 1);
+            docWords.forEach(word => tfDoc[word] = (tfDoc[word] || 0) + 1);
+            
+            let score = 0;
+            wordSet.forEach(word => {
+                const tf = (tfQuery[word] || 0) / queryWords.length * (tfDoc[word] || 0) / docWords.length;
+                const idf = Math.log(1 + (2 / ((tfQuery[word] ? 1 : 0) + (tfDoc[word] ? 1 : 0) + 1)));
+                score += tf * idf;
+            });
+            return score;
         }
-        const knowledgeBase = [
-            { question: "quién creó esta página", answer: "Esta página fue creada por Ivooubi.", keywords: ["creó", "creador", "hizo", "pagina", "web", "ubgames"] },
-            { question: "quien hizo esta web", answer: "Ivooubi es el creador de esta web.", keywords: ["hizo", "creador", "web", "ubgames"] },
-            { question: "creador de ubgames", answer: "El creador de UBGames.88 es Ivooubi.", keywords: ["creador", "ubgames"] },
-            { question: "cuándo se creó esta página", answer: "Esta página se creó el 14/6/2025.", keywords: ["creó", "cuando", "fecha", "pagina", "web"] },
-            { question: "fecha de creación de esta página", answer: "UBGames.88 fue creada el 14 de junio de 2025.", keywords: ["fecha", "creacion", "pagina"] },
-            { question: "qué es esta página", answer: "Esta página es una web de juegos desbloqueados gratuitos para divertirte sin límites.", keywords: ["que", "es", "pagina", "web", "ubgames"] },
-            { question: "qué es ubgames", answer: "UBGames.88 es una web con juegos gratuitos y una sección de IA interactiva para responder tus preguntas.", keywords: ["que", "es", "ubgames"] },
-            { question: "qué juegos hay en esta página", answer: "UBGames.88 ofrece Head Soccer 2024, 23 Azo, Slope y WeFut, todos accesibles desde la sección de Juegos.", keywords: ["juegos", "hay", "pagina", "ubgames"] },
-            { question: "cómo jugar en esta página", answer: "En la sección de Juegos, haz clic en un juego para abrirlo en una ventana. Usa los botones 'Cerrar' o 'Pantalla Completa' para controlar la experiencia.", keywords: ["jugar", "como", "pagina", "juegos"] },
-            { question: "qué hace la sección de ia", answer: "La sección de IA te permite hacer preguntas sobre cualquier tema, ¡y yo te respondo como un asistente inteligente!", keywords: ["ia", "seccion", "que", "hace"] },
-            { question: "cómo usar la ia", answer: "En la sección de IA, escribe tu pregunta en el campo 'Pregunta algo' y presiona Enter. La respuesta aparecerá justo debajo.", keywords: ["usar", "ia", "como"] },
-            { question: "por qué se llama ubgames.88", answer: "El nombre UBGames.88 refleja una plataforma de juegos desbloqueados (UnBlocked) con un toque moderno y único.", keywords: ["por", "que", "ubgames", "nombre"] },
-            { question: "puedo jugar gratis", answer: "¡Sí! Todos los juegos en UBGames.88 son gratuitos y desbloqueados para que disfrutes sin restricciones.", keywords: ["jugar", "gratis", "puedo"] },
-            { question: "qué ofrece ubgames", answer: "UBGames.88 ofrece juegos desbloqueados gratuitos como Head Soccer 2024, 23 Azo, Slope y WeFut, además de una IA para responder preguntas.", keywords: ["ofrece", "ubgames", "que"] },
-            { question: "cómo funciona esta página", answer: "UBGames.88 tiene una sección de juegos donde puedes jugar títulos desbloqueados y una sección de IA para responder preguntas. Usa el menú para navegar.", keywords: ["funciona", "pagina", "como"] },
-            { question: "hola", answer: "¡Hola! Bienvenido a UBGames.88. ¿Quieres jugar o preguntarme algo?", keywords: ["hola"] },
-            { question: "qué tal", answer: "¡Genial, gracias! ¿Listo para explorar los juegos o charlar con la IA?", keywords: ["que", "tal"] },
-            { question: "cómo estás", answer: "¡Súper, gracias por preguntar! ¿Quieres saber más sobre UBGames.88 o algo más?", keywords: ["como", "estas"] },
-            { question: "hola cómo estás", answer: "¡Hola! Estoy genial, listo para ayudarte en UBGames.88. ¿Y tú?", keywords: ["hola", "como", "estas"] },
-            { question: "qué haces", answer: "Estoy aquí en UBGames.88, respondiendo preguntas y ayudando con los juegos. ¿Qué quieres hacer?", keywords: ["que", "haces"] },
-            { question: "cuéntame un chiste", answer: "¡Vale! ¿Por qué el astronauta rompió con su pareja? Porque necesitaba espacio.", keywords: ["chiste", "cuentame"] },
-            { question: "qué es el sol", answer: "El Sol es una estrella que ilumina y calienta nuestro sistema solar, esencial para la vida en la Tierra.", keywords: ["sol", "que", "es"] },
-            { question: "cómo funciona un coche", answer: "Un coche usa un motor para convertir energía (gasolina o electricidad) en movimiento, impulsando las ruedas a través de una transmisión.", keywords: ["coche", "funciona", "como"] },
-            { question: "quién es einstein", answer: "Albert Einstein, físico alemán, creador de la relatividad y la famosa ecuación E=mc².", keywords: ["einstein", "quien"] },
-            { question: "qué es la gravedad", answer: "La gravedad es la fuerza que atrae objetos con masa, como la que mantiene a los planetas orbitando el Sol.", keywords: ["gravedad", "que", "es"] },
-            { question: "cómo se hace un pastel", answer: "Mezcla harina, azúcar, huevos, mantequilla, levadura y vainilla, luego hornea a 180°C por 25-35 minutos.", keywords: ["pastel", "como", "hace"] },
-            { question: "qué es internet", answer: "Internet es una red global de computadoras que permite compartir información usando protocolos como TCP/IP.", keywords: ["internet", "que", "es"] },
-            { question: "por qué llueve", answer: "Llueve cuando el vapor de agua en las nubes se condensa y cae por la gravedad.", keywords: ["llueve", "por", "que"] },
-            { question: "qué es un virus", answer: "Un virus es un microorganismo que infecta células para reproducirse, causando a veces enfermedades.", keywords: ["virus", "que", "es"] },
-            { question: "cómo volar un avión", answer: "Volar un avión implica controlar superficies de vuelo y motor, siguiendo instrumentos de navegación.", keywords: ["avion", "volar", "como"] },
-            { question: "qué es el amor", answer: "El amor es una emoción de afecto y conexión hacia personas, cosas o ideas.", keywords: ["amor", "que", "es"] },
-            { question: "qué es la luna", answer: "La Luna es el satélite natural de la Tierra, que afecta las mareas y orbita nuestro planeta.", keywords: ["luna", "que", "es"] },
-            { question: "cómo funciona la electricidad", answer: "La electricidad es el flujo de electrones por un conductor, generado por una diferencia de voltaje.", keywords: ["electricidad", "funciona", "como"] },
-            { question: "quién inventó el teléfono", answer: "Alexander Graham Bell inventó el teléfono en 1876.", keywords: ["telefono", "invento", "quien"] },
-            { question: "qué es un dinosaurio", answer: "Los dinosaurios fueron reptiles prehistóricos, como el T-Rex, que vivieron hace millones de años.", keywords: ["dinosaurio", "que", "es"] },
-            { question: "cómo se forma un arcoíris", answer: "Un arcoíris se forma por la refracción y reflexión de la luz solar en gotas de agua.", keywords: ["arcoiris", "forma", "como"] },
-            { question: "qué hora es", answer: "Son las 21:11 CEST, sábado 14 de junio de 2025. ¿Qué más quieres saber?", keywords: ["hora", "que", "es"] },
-            { question: "cuál es la capital de españa", answer: "La capital de España es Madrid.", keywords: ["capital", "españa", "cual"] },
-            { question: "por qué el cielo es azul", answer: "El cielo es azul por la dispersión de Rayleigh, que dispersa más la luz azul del Sol.", keywords: ["cielo", "azul", "por", "que"] },
-            { question: "qué es la fotosíntesis", answer: "La fotosíntesis es el proceso de las plantas para convertir luz solar, agua y CO₂ en glucosa y oxígeno.", keywords: ["fotosintesis", "que", "es"] },
-            { question: "quién escribió don quijote", answer: "Miguel de Cervantes escribió 'Don Quijote de la Mancha'.", keywords: ["don", "quijote", "escribio", "quien"] },
-            { question: "cómo se hace el café", answer: "Muele granos de café tostados, mezcla con agua caliente y filtra para obtener la bebida.", keywords: ["cafe", "hace", "como"] },
-            { question: "qué es el cambio climático", answer: "El cambio climático es el cambio a largo plazo en los patrones climáticos, a menudo por actividades humanas.", keywords: ["cambio", "climatico", "que", "es"] },
-            { question: "qué es la inteligencia artificial", answer: "La IA es la simulación de inteligencia humana por máquinas, como la que uso para responderte en UBGames.88.", keywords: ["inteligencia", "artificial", "que", "es"] },
-            { question: "cómo se juega al fútbol", answer: "El fútbol se juega con dos equipos de 11 jugadores, intentando meter un balón en la portería contraria.", keywords: ["futbol", "juega", "como"] },
-            { question: "qué es el universo", answer: "El universo es todo lo que existe: espacio, tiempo, materia y energía.", keywords: ["universo", "que", "es"] },
-            { question: "por qué los pájaros cantan", answer: "Los pájaros cantan para comunicarse, atraer parejas o marcar territorio.", keywords: ["pajaros", "cantan", "por", "que"] },
-            { question: "qué es un volcán", answer: "Un volcán es una abertura en la Tierra por donde sale magma, cenizas y gases.", keywords: ["volcan", "que", "es"] },
-            { question: "cómo funciona un cohete", answer: "Un cohete expulsa gases a alta velocidad para propulsarse, siguiendo la tercera ley de Newton.", keywords: ["cohete", "funciona", "como"] },
-            { question: "quién es leonardo da vinci", answer: "Leonardo da Vinci fue un artista e inventor renacentista, conocido por la Mona Lisa y sus diseños.", keywords: ["leonardo", "da", "vinci", "quien"] },
-            { question: "qué es la evolución", answer: "La evolución es el cambio en las características de las especies a lo largo de generaciones.", keywords: ["evolucion", "que", "es"] },
-            { question: "cómo se hace una pizza", answer: "Extiende masa, añade salsa de tomate, queso y toppings, luego hornea a 220°C por 10-15 minutos.", keywords: ["pizza", "hace", "como"] },
-            { question: "qué es un agujero negro", answer: "Un agujero negro es una región del espacio con gravedad tan intensa que nada, ni la luz, escapa.", keywords: ["agujero", "negro", "que", "es"] },
-            { question: "por qué dormimos", answer: "Dormimos para descansar el cuerpo, procesar recuerdos y regular funciones biológicas.", keywords: ["dormimos", "por", "que"] },
-            { question: "qué es el adn", answer: "El ADN es una molécula que contiene las instrucciones genéticas de los seres vivos.", keywords: ["adn", "que", "es"] },
-            { question: "cómo funciona un ordenador", answer: "Un ordenador procesa datos usando un CPU, memoria y software, ejecutando instrucciones binarias.", keywords: ["ordenador", "funciona", "como"] },
-            { question: "quién descubrió américa", answer: "Cristóbal Colón es conocido por llegar a América en 1492, aunque otros pueblos ya la habitaban.", keywords: ["america", "descubrio", "quien"] },
-            { question: "qué es la democracia", answer: "La democracia es un sistema donde los ciudadanos eligen a sus gobernantes mediante votaciones.", keywords: ["democracia", "que", "es"] },
-            { question: "cómo se forma el viento", answer: "El viento se forma por diferencias en la presión atmosférica, moviendo el aire de alta a baja presión.", keywords: ["viento", "forma", "como"] },
-            { question: "qué es un tsunami", answer: "Un tsunami es una serie de olas gigantes causadas por desplazamientos en el océano, como terremotos.", keywords: ["tsunami", "que", "es"] },
-            { question: "por qué las estrellas brillan", answer: "Las estrellas brillan por reacciones nucleares en su núcleo que liberan energía como luz.", keywords: ["estrellas", "brillan", "por", "que"] },
-            { question: "qué es la energía solar", answer: "La energía solar es la electricidad o calor generado a partir de la luz del Sol usando paneles solares.", keywords: ["energia", "solar", "que", "es"] },
-            { question: "cómo se hace un libro", answer: "Un libro se hace escribiendo contenido, diseñándolo, imprimiéndolo y encuadernándolo.", keywords: ["libro", "hace", "como"] },
-            { question: "qué es la globalización", answer: "La globalización es la interconexión mundial de economías, culturas y sociedades.", keywords: ["globalizacion", "que", "es"] },
-            { question: "por qué hay guerras", answer: "Las guerras surgen por conflictos de recursos, poder, ideologías o territorios.", keywords: ["guerras", "por", "que"] },
-            { question: "qué es el reciclaje", answer: "El reciclaje es el proceso de reutilizar materiales desechados para crear nuevos productos.", keywords: ["reciclaje", "que", "es"] }
-        ];
-        const fallbackResponses = [
-            "Mmm, no estoy seguro de eso. ¿Puedes preguntar algo más sobre UBGames.88 o cualquier otro tema?",
-            "¡Vaya, esa es nueva! Prueba con otra pregunta, soy todo oídos... o mejor dicho, todo código.",
-            "No pillé esa, pero estoy listo para otra. ¿Quizás algo sobre los juegos de esta página?",
-            "Esa pregunta me despistó. ¿Quieres saber más sobre UBGames.88 o algo diferente?"
-        ];
-        function findClosestQuestion(input) {
-            const normalizedInput = input.toLowerCase().trim().replace(/[¿?¡!.,]/g, '');
-            let minDistance = Infinity;
+
+        function keywordMatch(input, keywords) {
+            const inputWords = normalizeText(input).split(/\s+/);
+            return keywords.some(keyword => inputWords.includes(normalizeText(keyword)));
+        }
+
+        function detectLanguage(input) {
+            const normalizedInput = normalizeText(input);
+            const englishKeywords = ['who', 'what', 'when', 'where', 'why', 'how', 'is', 'are', 'can', 'tell', 'hello', 'hi'];
+            const spanishKeywords = ['quien', 'que', 'cuando', 'donde', 'por', 'como', 'es', 'puedo', 'hola'];
+            const englishScore = englishKeywords.reduce((score, keyword) => score + (normalizedInput.includes(keyword) ? 1 : 0), 0);
+            const spanishScore = spanishKeywords.reduce((score, keyword) => score + (normalizedInput.includes(keyword) ? 1 : 0), 0);
+            return englishScore > spanishScore ? 'en' : 'es';
+        }
+
+        function correctTypo(input, lang) {
+            const normalizedInput = normalizeText(input);
             let closestQuestion = null;
-            let keywordMatchEntry = null;
-            // Levenshtein distance matching
+            let minDistance = Infinity;
+            const maxDistance = Math.min(3, Math.floor(normalizedInput.length * 0.3)); // Dynamic threshold
             for (const entry of knowledgeBase) {
-                const normalizedEntry = entry.question.toLowerCase().replace(/[¿?¡!.,]/g, '');
+                if (entry.lang !== lang) continue;
+                const normalizedEntry = normalizeText(entry.question);
                 const distance = levenshtein(normalizedInput, normalizedEntry);
-                const threshold = Math.min(6, Math.max(3, normalizedEntry.length * 0.3)); // Dynamic threshold
-                if (distance < minDistance && distance <= threshold) {
+                if (distance < minDistance && distance <= maxDistance && distance > 0) {
                     minDistance = distance;
-                    closestQuestion = entry;
+                    closestQuestion = entry.question;
                 }
-                // Keyword matching as fallback
+            }
+            return closestQuestion;
+        }
+
+        const knowledgeBase = [
+            // Spanish Entries
+            { question: "quién creó esta página", answer: "Esta página fue creada por Paul.", keywords: ["quien", "creó", "pagina", "ubgames"], lang: "es" },
+            { question: "quién hizo esta web", answer: "Paul es el creador de esta web.", keywords: ["quien", "hizo", "web", "ubgames"], lang: "es" },
+            { question: "creador de ubgames", answer: "El creador de UBGames.88 es Paul.", keywords: ["creador", "ubgames"], lang: "es" },
+            { question: "cuándo se creó esta página", answer: "Esta página se creó el 14 de junio de 2025.", keywords: ["cuando", "creó", "pagina"], lang: "es" },
+            { question: "qué es esta página", answer: "Esta página es una plataforma de juegos desbloqueados gratuitos y una IA interactiva.", keywords: ["que", "es", "pagina", "ubgames"], lang: "es" },
+            { question: "qué es ubgames", answer: "UBGames.88 es una web con juegos gratuitos y una IA para responder preguntas.", keywords: ["que", "es", "ubgames"], lang: "es" },
+            { question: "qué juegos hay en esta página", answer: "UBGames.88 ofrece Head Soccer 2024, 23 Azo, Slope y WeFut en la sección de Juegos.", keywords: ["juegos", "hay", "pagina"], lang: "es" },
+            { question: "cómo jugar en esta página", answer: "Haz clic en un juego en la sección de Juegos para abrirlo. Usa 'Cerrar' o 'Pantalla Completa' para controlarlo.", keywords: ["como", "jugar", "pagina"], lang: "es" },
+            { question: "qué hace la sección de ia", answer: "La sección de IA responde preguntas sobre diversos temas, incluidos datos de archivos cargados.", keywords: ["ia", "seccion", "que"], lang: "es" },
+            { question: "cómo usar la ia", answer: "Escribe tu pregunta en el campo de la sección de IA y presiona Enter para obtener una respuesta.", keywords: ["como", "usar", "ia"], lang: "es" },
+            { question: "por qué se llama ubgames.88", answer: "UBGames.88 significa 'UnBlocked Games' con un toque moderno y único.", keywords: ["por", "que", "ubgames", "nombre"], lang: "es" },
+            { question: "puedo jugar gratis", answer: "¡Sí! Todos los juegos en UBGames.88 son gratuitos y desbloqueados.", keywords: ["puedo", "jugar", "gratis"], lang: "es" },
+            { question: "qué ofrece ubgames", answer: "UBGames.88 ofrece juegos desbloqueados y una IA para responder preguntas.", keywords: ["que", "ofrece", "ubgames"], lang: "es" },
+            { question: "cómo funciona esta página", answer: "UBGames.88 tiene juegos desbloqueados y una sección de IA. Usa el menú para navegar.", keywords: ["como", "funciona", "pagina"], lang: "es" },
+            { question: "hola", answer: "¡Hola! Bienvenido a UBGames.88. ¿Quieres jugar o preguntarme algo?", keywords: ["hola"], lang: "es" },
+            { question: "qué tal", answer: "¡Genial, gracias! ¿Listo para juegos o charlar con la IA?", keywords: ["que", "tal"], lang: "es" },
+            { question: "cómo estás", answer: "¡Súper, gracias! ¿Quieres saber más sobre UBGames.88?", keywords: ["como", "estas"], lang: "es" },
+            { question: "cuéntame un chiste", answer: "¿Por qué el astronauta rompió con su pareja? Porque necesitaba espacio.", keywords: ["cuentame", "chiste"], lang: "es" },
+            { question: "qué es la inteligencia artificial", answer: "La inteligencia artificial (IA) es la simulación de inteligencia humana por máquinas, como yo, para responder preguntas.", keywords: ["que", "inteligencia", "artificial"], lang: "es" },
+            // English Entries
+            { question: "who created this page", answer: "This page was created by Paul.", keywords: ["who", "created", "page", "ubgames"], lang: "en" },
+            { question: "who made this website", answer: "Paul is the creator of this website.", keywords: ["who", "made", "website", "ubgames"], lang: "en" },
+            { question: "when was this page created", answer: "This page was created on June 14, 2025.", keywords: ["when", "created", "page"], lang: "en" },
+            { question: "what is this page", answer: "This page is a platform for free unblocked games and an interactive AI.", keywords: ["what", "is", "page", "ubgames"], lang: "en" },
+            { question: "what is ubgames", answer: "UBGames.88 is a website with free unblocked games and an AI to answer questions.", keywords: ["what", "is", "ubgames"], lang: "en" },
+            { question: "what games are on this page", answer: "UBGames.88 offers Head Soccer 2024, 23 Azo, Slope, and WeFut in the Games section.", keywords: ["games", "on", "page"], lang: "en" },
+            { question: "how to play games on this page", answer: "Click a game in the Games section to open it. Use 'Close' or 'Fullscreen' to control it.", keywords: ["how", "play", "games", "page"], lang: "en" },
+            { question: "what does the ai section do", answer: "The AI section answers questions on various topics, including uploaded file data.", keywords: ["ai", "section", "what"], lang: "en" },
+            { question: "how to use the ai", answer: "Type your question in the AI section's input field and press Enter to get a response.", keywords: ["how", "use", "ai"], lang: "en" },
+            { question: "why is it called ubgames.88", answer: "UBGames.88 stands for 'UnBlocked Games' with a modern, unique twist.", keywords: ["why", "called", "ubgames"], lang: "en" },
+            { question: "can I play for free", answer: "Yes, all games on UBGames.88 are free and unblocked.", keywords: ["can", "play", "free"], lang: "en" },
+            { question: "what does ubgames offer", answer: "UBGames.88 offers free unblocked games and an AI for answering questions.", keywords: ["what", "offer", "ubgames"], lang: "en" },
+            { question: "how does this page work", answer: "UBGames.88 has unblocked games and an AI section. Use the menu to navigate.", keywords: ["how", "work", "page"], lang: "en" },
+            { question: "hello", answer: "Hi! Welcome to UBGames.88. Want to play games or ask me something?", keywords: ["hello", "hi"], lang: "en" },
+            { question: "how are you", answer: "I'm doing great, thanks! Ready to help with games or questions.", keywords: ["how", "are", "you"], lang: "en" },
+            { question: "tell me a joke", answer: "Why did the scarecrow become a motivational speaker? Because he was outstanding in his field!", keywords: ["tell", "joke"], lang: "en" }
+        ];
+
+        const fallbackResponses = {
+            es: [
+                "No entendí bien. ¿Puedes preguntar algo más sobre UBGames.88 o cualquier tema?",
+                "¡Esa me pilló! Prueba otra pregunta, estoy listo.",
+                "No capté esa. ¿Quizás algo sobre los juegos o la IA?",
+                "Esa pregunta me despistó. ¿Quieres saber más sobre UBGames.88?"
+            ],
+            en: [
+                "I didn't quite get that. Try another question about UBGames.88 or anything else!",
+                "That one stumped me! Ask something else, I'm ready.",
+                "I missed that one. Maybe ask about the games or AI?",
+                "Not sure about that. Want to know more about UBGames.88?"
+            ]
+        };
+
+        function processFileQuery(question, lang) {
+            const fileData = loadFileData('uploaded_file.xlsx');
+            if (fileData && (question.toLowerCase().includes('archivo') || question.toLowerCase().includes('file'))) {
+                try {
+                    const rows = fileData.split('\n').map(row => row.split(','));
+                    if (rows.length > 1) {
+                        const headers = rows[0];
+                        const data = rows.slice(1).filter(row => row.some(filledCell));
+                        return lang === 'es'
+                            ? `Datos del archivo:\nEncabezados: ${headers.join(', ')}\nFilas: ${data.length}\nEjemplo: ${data[0]?.join(', ') || 'Sin datos válidos'}`
+                            : `File data:\nHeaders: ${headers.join(', ')}\nRows: ${data.length}\nSample: ${data[0]?.join(', ') || 'No valid data'}`;
+                    }
+                    return lang === 'es' ? "El archivo está vacío o no tiene datos válidos." : "The file is empty or has no valid data.";
+                } catch (e) {
+                    return lang === 'es' ? "Error al procesar el archivo. Asegúrate de que sea un .xlsx válido." : "Error processing the file. Ensure it's a valid .xlsx.";
+                }
+            }
+            return null;
+        }
+
+        async function findClosestQuestion(input) {
+            const normalizedInput = normalizeText(input);
+            const lang = detectLanguage(input);
+            let bestMatch = null;
+            let highestScore = -Infinity;
+            let keywordMatchEntry = null;
+
+            // Check context for follow-ups
+            if (conversationContext.length > 0 && (normalizedInput.includes('mas') || normalizedInput.includes('more'))) {
+                const lastQuestion = conversationContext[conversationContext.length - 1].question;
+                return { answer: lang === 'es' ? `¿Quieres más detalles sobre "${lastQuestion}"? Por favor, especifica.` : `Want more details about "${lastQuestion}"? Please specify.` };
+            }
+
+            // File processing
+            const fileResponse = processFileQuery(input, lang);
+            if (fileResponse) return { answer: fileResponse };
+
+            // Typo correction
+            const correctedQuestion = correctTypo(input, lang);
+            if (correctedQuestion && correctedQuestion !== input) {
+                document.getElementById('aiSuggestion').textContent = lang === 'es' ? `Quizá quisiste decir: ${correctedQuestion}` : `Did you mean: ${correctedQuestion}?`;
+                document.getElementById('aiSuggestion').onclick = () => {
+                    document.getElementById('aiInput').value = correctedQuestion;
+                    sendQuestion();
+                };
+            } else {
+                document.getElementById('aiSuggestion').textContent = '';
+                document.getElementById('aiSuggestion').onclick = null;
+            }
+
+            // Advanced matching
+            for (const entry of knowledgeBase) {
+                if (entry.lang !== lang) continue;
+                const normalizedEntry = normalizeText(entry.question);
+                const levDistance = levenshtein(normalizedInput, normalizedEntry);
+                const tfidfScore = computeTFIDF(normalizedInput, normalizedEntry);
+                const combinedScore = tfidfScore / (levDistance + 1);
+                if (combinedScore > highestScore && levDistance <= 4) { // Stricter threshold
+                    highestScore = combinedScore;
+                    bestMatch = entry;
+                }
                 if (entry.keywords && keywordMatch(normalizedInput, entry.keywords)) {
                     keywordMatchEntry = entry;
                 }
             }
-            return closestQuestion || keywordMatchEntry || { answer: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)] };
+
+            const result = bestMatch || keywordMatchEntry || {
+                answer: fallbackResponses[lang][Math.floor(Math.random() * fallbackResponses[lang].length)]
+            };
+
+            // Update context
+            conversationContext.push({ question: input, answer: result.answer });
+            if (conversationContext.length > MAX_CONTEXT_LENGTH) {
+                conversationContext.shift();
+            }
+
+            return result;
         }
-        function sendQuestion() {
+
+        async function sendQuestion() {
             const input = document.getElementById('aiInput');
             const responseContainer = document.getElementById('aiResponse');
+            const loading = document.getElementById('aiLoading');
+            const error = document.getElementById('aiError');
+            const suggestion = document.getElementById('aiSuggestion');
             const question = input.value.trim();
-            if (!question) return;
-            const response = findClosestQuestion(question);
-            responseContainer.textContent = response.answer;
-            input.value = '';
+
+            if (!question) {
+                error.style.display = 'block';
+                error.textContent = detectLanguage(question) === 'es' ? 'Por favor, escribe una pregunta.' : 'Please enter a question.';
+                suggestion.textContent = '';
+                return;
+            }
+
+            error.style.display = 'none';
+            loading.style.display = 'block';
+            responseContainer.textContent = '';
+            suggestion.textContent = '';
+
+            try {
+                const response = await findClosestQuestion(question);
+                responseContainer.textContent = response.answer;
+            } catch (e) {
+                error.style.display = 'block';
+                error.textContent = detectLanguage(question) === 'es' ? 'Error al procesar la pregunta. Intenta de nuevo.' : 'Error processing your question. Try again.';
+                console.error(e);
+            } finally {
+                loading.style.display = 'none';
+                input.value = '';
+            }
         }
     </script>
 </body>
