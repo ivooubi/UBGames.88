@@ -1,44 +1,4 @@
-
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -47,15 +7,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f0f0f0;
+            --sidebar-bg: #e0e0e0;
+            --modal-bg: #ffffff;
+            --button-bg: #000000;
+            --button-text: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+        body.dark-mode {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #1a1a1a;
+            --sidebar-bg: #1a1a1a;
+            --modal-bg: #000000;
+            --button-bg: #ffffff;
+            --button-text: #000000;
+            --shadow-color: rgba(255, 255, 255, 0.2);
+        }
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Montserrat', sans-serif;
             display: flex;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 2000;
+            font-size: 1.5rem;
         }
         .hamburger {
             position: fixed;
@@ -63,22 +52,31 @@
             left: 20px;
             cursor: pointer;
             z-index: 2000;
-            display: block;
-        }
-        .hamburger.open {
-            display: none;
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .hamburger div {
-            width: 30px;
-            height: 4px;
-            background-color: #fff;
-            margin: 6px 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            width: 100%;
+            height: 3px;
+            background-color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        .hamburger.open div:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .hamburger.open div:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.open div:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
         }
         .sidebar {
             width: 200px;
-            background-color: #1a1a1a;
-            padding: 20px 0;
+            background-color: var(--sidebar-bg);
+            padding: 60px 0 20px 0;
             position: fixed;
             height: 100%;
             display: flex;
@@ -91,7 +89,7 @@
             transform: translateX(0);
         }
         .sidebar a {
-            color: #fff;
+            color: var(--text-color);
             text-decoration: none;
             padding: 15px 20px;
             font-size: 1.2rem;
@@ -121,7 +119,7 @@
         .header h1 {
             font-size: 3.5rem;
             font-weight: 700;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            text-shadow: 0 0 15px var(--shadow-color), 0 0 5px var(--shadow-color); /* Increased shadow effect */
             margin: 0;
             animation: fadeIn 2s ease-in-out;
         }
@@ -134,7 +132,7 @@
             width: 100%;
         }
         .game-card {
-            background-color: #1a1a1a;
+            background-color: var(--card-bg);
             border-radius: 8px;
             padding: 10px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -143,11 +141,12 @@
         }
         .game-card:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px var(--shadow-color);
         }
         .game-card h2 {
             font-size: 1.2rem;
             margin: 0;
+            color: var(--text-color);
         }
         .modal {
             display: none;
@@ -165,7 +164,7 @@
             width: 80%;
             max-width: 1000px;
             height: 80vh;
-            background-color: #000;
+            background-color: var(--modal-bg);
             border-radius: 10px;
             position: relative;
             overflow: hidden;
@@ -179,11 +178,11 @@
             display: flex;
             justify-content: space-between;
             padding: 10px;
-            background-color: #1a1a1a;
+            background-color: var(--card-bg);
         }
         .modal-buttons button {
-            background-color: #fff;
-            color: #000;
+            background-color: var(--button-bg);
+            color: var(--button-text);
             border: none;
             padding: 8px 16px;
             border-radius: 5px;
@@ -203,8 +202,8 @@
             padding: 20px;
         }
         .ai-input {
-            background-color: #fff;
-            color: #000;
+            background-color: var(--button-bg);
+            color: var(--button-text);
             border: none;
             padding: 8px 12px;
             font-size: 0.9rem;
@@ -225,7 +224,7 @@
         }
         .ai-response {
             width: 100%;
-            background-color: #1a1a1a;
+            background-color: var(--card-bg);
             border-radius: 8px;
             padding: 15px;
             text-align: left;
@@ -233,6 +232,7 @@
             max-height: 300px;
             overflow-y: auto;
             animation: fadeInResponse 0.5s ease-in;
+            color: var(--text-color);
         }
         .ai-loading {
             display: none;
@@ -260,6 +260,7 @@
                 height: auto;
                 transform: translateY(-100%);
                 flex-direction: column;
+                padding-top: 50px;
             }
             .sidebar.open {
                 transform: translateY(0);
@@ -287,6 +288,7 @@
     </style>
 </head>
 <body>
+    <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">☀️</div>
     <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
         <div></div>
         <div></div>
@@ -365,6 +367,12 @@
                 }
             }
             return gk_fileData[filename] || "";
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.textContent = document.body.classList.contains('dark-mode') ? '🌙' : '☀️';
         }
 
         function toggleSidebar() {
@@ -466,23 +474,32 @@
 
         function keywordMatch(input, keywords) {
             const inputWords = normalizeText(input).split(/\s+/);
-            return keywords.some(keyword => inputWords.includes(normalizeText(keyword)));
+            return keywords.reduce((score, keyword) => score + (inputWords.includes(normalizeText(keyword)) ? 1 : 0), 0);
         }
 
         function detectLanguage(input) {
             const normalizedInput = normalizeText(input);
-            const englishKeywords = ['who', 'what', 'when', 'where', 'why', 'how', 'is', 'are', 'can', 'tell', 'hello', 'hi'];
-            const spanishKeywords = ['quien', 'que', 'cuando', 'donde', 'por', 'como', 'es', 'puedo', 'hola'];
+            const englishKeywords = ['who', 'what', 'when', 'where', 'why', 'how', 'is', 'are', 'can', 'tell', 'hello', 'hi', 'bored', 'feeling'];
+            const spanishKeywords = ['quien', 'que', 'cuando', 'donde', 'por', 'como', 'es', 'puedo', 'hola', 'aburro', 'siento'];
             const englishScore = englishKeywords.reduce((score, keyword) => score + (normalizedInput.includes(keyword) ? 1 : 0), 0);
             const spanishScore = spanishKeywords.reduce((score, keyword) => score + (normalizedInput.includes(keyword) ? 1 : 0), 0);
             return englishScore > spanishScore ? 'en' : 'es';
+        }
+
+        function detectSentiment(input) {
+            const positiveWords = ['bien', 'feliz', 'genial', 'good', 'happy', 'great'];
+            const negativeWords = ['mal', 'triste', 'aburrido', 'bad', 'sad', 'bored'];
+            const normalizedInput = normalizeText(input);
+            const positiveScore = positiveWords.reduce((score, word) => score + (normalizedInput.includes(word) ? 1 : 0), 0);
+            const negativeScore = negativeWords.reduce((score, word) => score + (normalizedInput.includes(word) ? 1 : 0), 0);
+            return positiveScore > negativeScore ? 'positive' : negativeScore > positiveScore ? 'negative' : 'neutral';
         }
 
         function correctTypo(input, lang) {
             const normalizedInput = normalizeText(input);
             let closestQuestion = null;
             let minDistance = Infinity;
-            const maxDistance = Math.min(3, Math.floor(normalizedInput.length * 0.3)); // Dynamic threshold
+            const maxDistance = Math.min(3, Math.floor(normalizedInput.length * 0.3));
             for (const entry of knowledgeBase) {
                 if (entry.lang !== lang) continue;
                 const normalizedEntry = normalizeText(entry.question);
@@ -511,11 +528,45 @@
             { question: "puedo jugar gratis", answer: "¡Sí! Todos los juegos en UBGames.88 son gratuitos y desbloqueados.", keywords: ["puedo", "jugar", "gratis"], lang: "es" },
             { question: "qué ofrece ubgames", answer: "UBGames.88 ofrece juegos desbloqueados y una IA para responder preguntas.", keywords: ["que", "ofrece", "ubgames"], lang: "es" },
             { question: "cómo funciona esta página", answer: "UBGames.88 tiene juegos desbloqueados y una sección de IA. Usa el menú para navegar.", keywords: ["como", "funciona", "pagina"], lang: "es" },
-            { question: "hola", answer: "¡Hola! Bienvenido a UBGames.88. ¿Quieres jugar o preguntarme algo?", keywords: ["hola"], lang: "es" },
-            { question: "qué tal", answer: "¡Genial, gracias! ¿Listo para juegos o charlar con la IA?", keywords: ["que", "tal"], lang: "es" },
-            { question: "cómo estás", answer: "¡Súper, gracias! ¿Quieres saber más sobre UBGames.88?", keywords: ["como", "estas"], lang: "es" },
-            { question: "cuéntame un chiste", answer: "¿Por qué el astronauta rompió con su pareja? Porque necesitaba espacio.", keywords: ["cuentame", "chiste"], lang: "es" },
-            { question: "qué es la inteligencia artificial", answer: "La inteligencia artificial (IA) es la simulación de inteligencia humana por máquinas, como yo, para responder preguntas.", keywords: ["que", "inteligencia", "artificial"], lang: "es" },
+            { question: "hola", answer: ["¡Hola! Bienvenido a UBGames.88. ¿Quieres jugar o preguntarme algo?", "¡Hey, qué tal! ¿Listo para disfrutar de UBGames.88?"], keywords: ["hola"], lang: "es", sentiment: "neutral" },
+            { question: "qué tal", answer: ["¡Genial, gracias! ¿Listo para juegos o charlar con la IA?", "¡Todo bien por aquí! ¿Y contigo? ¿Juegos o preguntas?"], keywords: ["que", "tal"], lang: "es", sentiment: "neutral" },
+            { question: "cómo estás", answer: ["¡Súper, gracias! ¿Quieres saber más sobre UBGames.88?", "¡Estoy de maravilla! ¿Y tú, qué tal?"], keywords: ["como", "estas"], lang: "es", sentiment: "neutral" },
+            { question: "cuéntame un chiste", answer: [
+                "¿Por qué el astronauta rompió con su pareja? Porque necesitaba espacio.",
+                "¿Qué le dijo el semáforo al coche? No me mires, me estoy cambiando.",
+                "¿Por qué el tomate se puso rojo? Porque vio la ensalada desnuda."
+            ], keywords: ["cuentame", "chiste"], lang: "es", sentiment: "positive" },
+            { question: "qué hago si me aburro", answer: [
+                "¡Si te aburres, prueba uno de los juegos en UBGames.88 como Head Soccer 2024 o Slope! También puedes charlar conmigo sobre cualquier tema.",
+                "Para el aburrimiento, ¿qué tal un juego rápido en UBGames.88? O dime, ¿qué te gusta hacer normalmente?",
+                "El aburrimiento no tiene cabida aquí. ¡Juega a WeFut o pregunta algo divertido, como un chiste!"
+            ], keywords: ["que", "hago", "aburro"], lang: "es", sentiment: "negative" },
+            { question: "estoy aburrido", answer: [
+                "¡Venga, vamos a cambiar eso! Prueba un juego como 23 Azo o hazme una pregunta loca.",
+                "El aburrimiento no mola. ¿Quieres jugar a Slope o que te cuente un chiste para animarte?",
+                "¡Ánimo! Explora los juegos en UBGames.88 o dime qué te gusta para darte ideas."
+            ], keywords: ["aburrido", "estoy"], lang: "es", sentiment: "negative" },
+            { question: "me siento mal", answer: [
+                "Lo siento, amigo. ¿Quieres contarme qué pasa? También puedes distraerte con un juego como Head Soccer 2024.",
+                "¡Ánimo! A veces un juego en UBGames.88 o un buen chiste ayuda. ¿Te cuento uno?",
+                "Siento que estés así. ¿Qué tal si probamos algo divertido en la web para levantarte el ánimo?"
+            ], keywords: ["siento", "mal"], lang: "es", sentiment: "negative" },
+            { question: "me siento feliz", answer: [
+                "¡Qué alegría! Celebremos con un juego en UBGames.88 o dime, ¿por qué estás tan feliz?",
+                "¡Eso es genial! ¿Quieres compartir tu buena vibra jugando a Slope o charlando?",
+                "¡Me encanta tu energía! ¿Juegas a WeFut o me cuentas qué te tiene tan contento?"
+            ], keywords: ["siento", "feliz"], lang: "es", sentiment: "positive" },
+            { question: "qué puedo hacer hoy", answer: [
+                "¡Hoy es un gran día! Puedes jugar a Head Soccer 2024, explorar Slope, o preguntarme algo interesante.",
+                "Depende de tu mood: juega un juego en UBGames.88, lee algo nuevo, o charlemos sobre tus hobbies.",
+                "Prueba algo nuevo: un juego en la web o hazme una pregunta sobre lo que quieras."
+            ], keywords: ["que", "puedo", "hacer", "hoy"], lang: "es", sentiment: "neutral" },
+            { question: "dame un consejo", answer: [
+                "¡Claro! Tómate un momento para relajarte y prueba un juego en UBGames.88 para despejarte.",
+                "Un buen consejo: haz algo que te apasione hoy, ya sea jugar, leer o aprender algo nuevo.",
+                "Intenta establecer una pequeña meta hoy, como ganar una partida en Head Soccer 2024. ¡Pequeños logros animan!"
+            ], keywords: ["dame", "consejo"], lang: "es", sentiment: "neutral" },
+            { question: "qué es la inteligencia artificial", answer: "La inteligencia artificial (IA) es la simulación de inteligencia humana por máquinas, como yo, para responder preguntas y resolver problemas.", keywords: ["que", "inteligencia", "artificial"], lang: "es", sentiment: "neutral" },
             // English Entries
             { question: "who created this page", answer: "This page was created by Paul.", keywords: ["who", "created", "page", "ubgames"], lang: "en" },
             { question: "who made this website", answer: "Paul is the creator of this website.", keywords: ["who", "made", "website", "ubgames"], lang: "en" },
@@ -530,9 +581,38 @@
             { question: "can I play for free", answer: "Yes, all games on UBGames.88 are free and unblocked.", keywords: ["can", "play", "free"], lang: "en" },
             { question: "what does ubgames offer", answer: "UBGames.88 offers free unblocked games and an AI for answering questions.", keywords: ["what", "offer", "ubgames"], lang: "en" },
             { question: "how does this page work", answer: "UBGames.88 has unblocked games and an AI section. Use the menu to navigate.", keywords: ["how", "work", "page"], lang: "en" },
-            { question: "hello", answer: "Hi! Welcome to UBGames.88. Want to play games or ask me something?", keywords: ["hello", "hi"], lang: "en" },
-            { question: "how are you", answer: "I'm doing great, thanks! Ready to help with games or questions.", keywords: ["how", "are", "you"], lang: "en" },
-            { question: "tell me a joke", answer: "Why did the scarecrow become a motivational speaker? Because he was outstanding in his field!", keywords: ["tell", "joke"], lang: "en" }
+            { question: "hello", answer: ["Hi! Welcome to UBGames.88. Want to play games or ask me something?", "Hey there! Ready to dive into UBGames.88?"], keywords: ["hello", "hi"], lang: "en", sentiment: "neutral" },
+            { question: "how are you", answer: ["I'm doing great, thanks! Ready to help with games or questions.", "Feeling awesome, thanks for asking! What's up with you?"], keywords: ["how", "are", "you"], lang: "en", sentiment: "neutral" },
+            { question: "tell me a joke", answer: [
+                "Why did the scarecrow become a motivational speaker? Because he was outstanding in his field!",
+                "Why don't eggs tell jokes? They'd crack up.",
+                "What do you call a bear with no socks? Barefoot!"
+            ], keywords: ["tell", "joke"], lang: "en", sentiment: "positive" },
+            { question: "I'm bored", answer: [
+                "Let's fix that! Try a game like Head Soccer 2024 on UBGames.88 or ask me for a fun idea.",
+                "Boredom's no fun. Play Slope or let me tell you a joke to spice things up!",
+                "Time to shake things up! Check out WeFut or tell me what you usually enjoy."
+            ], keywords: ["bored", "i'm"], lang: "en", sentiment: "negative" },
+            { question: "I feel sad", answer: [
+                "I'm sorry you're feeling down. Want to talk about it or try a game like 23 Azo to lift your spirits?",
+                "Sad vibes are tough. How about a quick game on UBGames.88 or a funny joke?",
+                "I hear you. Let's try something fun—maybe a game or a chat about something you love."
+            ], keywords: ["feel", "sad"], lang: "en", sentiment: "negative" },
+            { question: "I feel happy", answer: [
+                "That's awesome! Let's keep the good vibes going with a game like Slope or a fun chat!",
+                "Love that energy! Want to play Head Soccer 2024 or share what's got you so happy?",
+                "Happy vibes rock! Try a game on UBGames.88 or tell me more about your mood."
+            ], keywords: ["feel", "happy"], lang: "en", sentiment: "positive" },
+            { question: "what can I do today", answer: [
+                "Today's full of possibilities! Play a game like WeFut, explore a new hobby, or ask me anything.",
+                "How about a quick game on UBGames.88? Or tell me what you're in the mood for!",
+                "Make today fun: try Head Soccer 2024 or let's brainstorm some cool ideas."
+            ], keywords: ["what", "can", "do", "today"], lang: "en", sentiment: "neutral" },
+            { question: "give me advice", answer: [
+                "Take a moment to relax with a game on UBGames.88 or try something new today!",
+                "Here's a tip: set a small goal, like beating a level in Slope, to boost your mood.",
+                "Find something you love and dive in—maybe a game or a new skill to learn!"
+            ], keywords: ["give", "advice"], lang: "en", sentiment: "neutral" }
         ];
 
         const fallbackResponses = {
@@ -573,6 +653,7 @@
         async function findClosestQuestion(input) {
             const normalizedInput = normalizeText(input);
             const lang = detectLanguage(input);
+            const sentiment = detectSentiment(input);
             let bestMatch = null;
             let highestScore = -Infinity;
             let keywordMatchEntry = null;
@@ -603,15 +684,17 @@
             // Advanced matching
             for (const entry of knowledgeBase) {
                 if (entry.lang !== lang) continue;
+                if (entry.sentiment && entry.sentiment !== sentiment && sentiment !== 'neutral') continue;
                 const normalizedEntry = normalizeText(entry.question);
                 const levDistance = levenshtein(normalizedInput, normalizedEntry);
                 const tfidfScore = computeTFIDF(normalizedInput, normalizedEntry);
-                const combinedScore = tfidfScore / (levDistance + 1);
-                if (combinedScore > highestScore && levDistance <= 4) { // Stricter threshold
+                const keywordScore = keywordMatch(normalizedInput, entry.keywords);
+                const combinedScore = (tfidfScore * 0.6 + keywordScore * 0.4) / (levDistance + 1);
+                if (combinedScore > highestScore && levDistance <= 4) {
                     highestScore = combinedScore;
                     bestMatch = entry;
                 }
-                if (entry.keywords && keywordMatch(normalizedInput, entry.keywords)) {
+                if (entry.keywords && keywordScore > 0) {
                     keywordMatchEntry = entry;
                 }
             }
@@ -620,13 +703,16 @@
                 answer: fallbackResponses[lang][Math.floor(Math.random() * fallbackResponses[lang].length)]
             };
 
+            // Handle dynamic responses
+            const finalAnswer = Array.isArray(result.answer) ? result.answer[Math.floor(Math.random() * result.answer.length)] : result.answer;
+
             // Update context
-            conversationContext.push({ question: input, answer: result.answer });
+            conversationContext.push({ question: input, answer: finalAnswer });
             if (conversationContext.length > MAX_CONTEXT_LENGTH) {
                 conversationContext.shift();
             }
 
-            return result;
+            return { answer: finalAnswer };
         }
 
         async function sendQuestion() {
