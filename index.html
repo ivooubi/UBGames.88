@@ -51,9 +51,9 @@
         }
         #lock-screen p { font-weight: 700; letter-spacing: 2px; opacity: 0.5; margin-bottom: 20px; }
 
-        /* CONTENIDO PRINCIPAL (OCULTO INICIALMENTE) */
-        #main-content { opacity: 0; transition: opacity 1s ease; }
-        #main-content.visible { opacity: 1; }
+        /* CONTENIDO PRINCIPAL */
+        #main-content { opacity: 0; transition: opacity 1s ease; height: 100%; width: 100%; display: none; }
+        #main-content.visible { opacity: 1; display: block; }
 
         #particleCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; display: block; pointer-events: none; }
 
@@ -95,7 +95,8 @@
         }
         .theme-toggle:hover { background: var(--text-color); color: var(--bg-color); }
 
-        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; justify-content: center; height: 100vh; pointer-events: none; overflow-y: auto; padding-top: 50px;}
+        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; overflow-y: auto; padding-top: 80px; scrollbar-width: none; }
+        .section::-webkit-scrollbar { display: none; }
         .section.active { display: flex; }
         .main-title { font-size: 4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 30px; pointer-events: auto; text-align: center;}
 
@@ -104,14 +105,13 @@
             grid-template-columns: repeat(2, 250px); 
             gap: 20px; 
             pointer-events: auto; 
-            max-height: 70vh;
-            padding: 20px;
+            padding: 20px 20px 100px 20px; /* Padding extra abajo para scroll */
         }
         .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 30px 15px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-5px); }
-        .game-card h3 { margin: 0; font-size: 1rem; text-transform: uppercase; }
+        .game-card h3 { margin: 0; font-size: 0.9rem; text-transform: uppercase; }
 
-        #ia-chat { width: 90%; max-width: 600px; height: 50vh; background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(128,128,128,0.3); display: flex; flex-direction: column; pointer-events: auto; }
+        #ia-chat { width: 90%; max-width: 600px; height: 60vh; background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(128,128,128,0.3); display: flex; flex-direction: column; pointer-events: auto; margin-bottom: 50px;}
         #chat-output { flex-grow: 1; padding: 20px; overflow-y: auto; font-size: 0.95rem; }
         .chat-input-area { display: flex; border-top: 1px solid rgba(128,128,128,0.3); padding: 15px; }
         #user-input { flex-grow: 1; background: transparent; border: none; color: var(--text-color); font-family: 'Montserrat'; outline: none; }
@@ -140,7 +140,7 @@
 
     <div id="lock-screen">
         <p>INTRODUCE EL CÓDIGO</p>
-        <input type="password" id="lock-input" placeholder="••••••">
+        <input type="password" id="lock-input" placeholder="••••••" autofocus>
     </div>
 
     <div id="main-content">
@@ -169,6 +169,8 @@
                 <div class="game-card" onclick="openGame('https://eaglercraft.dev/')"><h3>Minecraft</h3></div>
                 <div class="game-card" onclick="openGame('https://escaperoad.io/')"><h3>Scape Road</h3></div>
                 <div class="game-card" onclick="openGame('https://theimpostor.es/')"><h3>Impostor</h3></div>
+                <div class="game-card" onclick="openGame('https://chatgpt.com/')"><h3>ChatGPT</h3></div>
+                <div class="game-card" onclick="openGame('https://itsvijaysingh.github.io/Snow-Rider3D/')"><h3>Snow Riding</h3></div>
             </div>
         </section>
 
@@ -195,7 +197,7 @@
     </div>
 
     <script>
-        // LÓGICA DE CONTRASEÑA
+        // CONTRASEÑA
         const lockInput = document.getElementById('lock-input');
         const lockScreen = document.getElementById('lock-screen');
         const mainContent = document.getElementById('main-content');
@@ -203,13 +205,14 @@
         lockInput.addEventListener('input', (e) => {
             if (e.target.value.toLowerCase() === 'castor') {
                 lockScreen.classList.add('hidden');
-                mainContent.classList.add('visible');
-                // Enfocar el input de IA si el usuario va directo allí
-                setTimeout(() => { lockScreen.style.display = 'none'; }, 500);
+                mainContent.style.display = 'block';
+                setTimeout(() => { 
+                    mainContent.classList.add('visible');
+                    lockScreen.style.display = 'none'; 
+                }, 500);
             }
         });
 
-        // RESTO DEL CÓDIGO
         const API_KEY = "AIzaSyCeSAza9EzpyakNSRMeXvMN47XeXFcVNNk"; 
 
         function toggleSidebar() {
