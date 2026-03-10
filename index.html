@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBGames.88</title>
+    <title>UBGames.88 | Minimalist</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,7 +17,6 @@
             --transition-speed: 0.5s;
         }
 
-        /* Variables Modo Claro */
         body.light-mode {
             --bg-color: #e0e0e0;
             --text-color: #1a1a1a;
@@ -36,9 +35,28 @@
             transition: background-color var(--transition-speed), color var(--transition-speed);
         }
 
+        /* PANTALLA DE BLOQUEO */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        #lock-screen.hidden { opacity: 0; visibility: hidden; }
+        #lock-input {
+            background: transparent; border: none; border-bottom: 2px solid var(--text-color);
+            color: var(--text-color); font-family: 'Montserrat'; font-size: 2rem;
+            text-align: center; outline: none; padding: 10px; width: 300px;
+            letter-spacing: 5px; text-transform: lowercase;
+        }
+        #lock-screen p { font-weight: 700; letter-spacing: 2px; opacity: 0.5; margin-bottom: 20px; }
+
+        /* CONTENIDO PRINCIPAL (OCULTO INICIALMENTE) */
+        #main-content { opacity: 0; transition: opacity 1s ease; }
+        #main-content.visible { opacity: 1; }
+
         #particleCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; display: block; pointer-events: none; }
 
-        /* MENU BOTÓN */
         .menu-btn {
             position: fixed; top: 25px; left: 25px;
             width: 35px; height: 26px; z-index: 1001;
@@ -49,12 +67,10 @@
         .menu-btn.open .bar:nth-child(2) { opacity: 0; }
         .menu-btn.open .bar:nth-child(3) { transform: translateY(-11px) rotate(-45deg); background-color: #ff4d4d; }
 
-        /* SIDEBAR */
         .sidebar {
             position: fixed; top: 0; left: calc(-1 * var(--sidebar-width));
             width: var(--sidebar-width); height: 100%;
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(20px);
+            background: var(--sidebar-bg); backdrop-filter: blur(20px);
             z-index: 1000; transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1), background-color var(--transition-speed);
             padding-top: 100px; border-right: 1px solid rgba(128,128,128,0.2);
         }
@@ -66,7 +82,6 @@
         }
         .sidebar-item:hover, .sidebar-item.active { opacity: 1; background: rgba(128,128,128,0.1); }
 
-        /* CONTROLES ESQUINA DERECHA */
         .top-right-controls {
             position: fixed; top: 20px; right: 25px;
             display: flex; flex-direction: column; align-items: flex-end; z-index: 100;
@@ -80,23 +95,28 @@
         }
         .theme-toggle:hover { background: var(--text-color); color: var(--bg-color); }
 
-        /* SECCIONES */
-        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; justify-content: center; height: 100vh; pointer-events: none; }
+        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; justify-content: center; height: 100vh; pointer-events: none; overflow-y: auto; padding-top: 50px;}
         .section.active { display: flex; }
-        .main-title { font-size: 5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 40px; pointer-events: auto; }
+        .main-title { font-size: 4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 30px; pointer-events: auto; text-align: center;}
 
-        .games-grid { display: grid; grid-template-columns: repeat(2, 280px); gap: 25px; pointer-events: auto; }
-        .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 40px 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .games-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 250px); 
+            gap: 20px; 
+            pointer-events: auto; 
+            max-height: 70vh;
+            padding: 20px;
+        }
+        .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 30px 15px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-5px); }
+        .game-card h3 { margin: 0; font-size: 1rem; text-transform: uppercase; }
 
-        /* CHAT IA */
         #ia-chat { width: 90%; max-width: 600px; height: 50vh; background: var(--card-bg); border-radius: 15px; border: 1px solid rgba(128,128,128,0.3); display: flex; flex-direction: column; pointer-events: auto; }
         #chat-output { flex-grow: 1; padding: 20px; overflow-y: auto; font-size: 0.95rem; }
         .chat-input-area { display: flex; border-top: 1px solid rgba(128,128,128,0.3); padding: 15px; }
         #user-input { flex-grow: 1; background: transparent; border: none; color: var(--text-color); font-family: 'Montserrat'; outline: none; }
         #send-btn { background: var(--text-color); color: var(--bg-color); border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: 700; }
 
-        /* MODAL */
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
@@ -118,54 +138,80 @@
 </head>
 <body>
 
-    <canvas id="particleCanvas"></canvas>
-    
-    <div class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div id="lock-screen">
+        <p>INTRODUCE EL CÓDIGO</p>
+        <input type="password" id="lock-input" placeholder="••••••">
     </div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-item active" onclick="showSection('games')">Juegos</div>
-        <div class="sidebar-item" onclick="showSection('ia')">IA Gemini</div>
-    </div>
-
-    <div class="top-right-controls">
-        <div id="clock">00:00:00</div>
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Modo Claro</button>
-    </div>
-
-    <section id="games-section" class="section active">
-        <h1 class="main-title">UBGames.88</h1>
-        <div class="games-grid">
-            <div class="game-card" onclick="openGame('https://geometrylitepc.io/')"><h3>Geometry Dash</h3></div>
-            <div class="game-card" onclick="openGame('https://survival-race.io/')"><h3>Survival Race</h3></div>
-            <div class="game-card" onclick="openGame('https://spacewaves.io/')"><h3>Space Waves</h3></div>
-            <div class="game-card" onclick="openGame('https://eaglercraft.dev/')"><h3>Minecraft</h3></div>
+    <div id="main-content">
+        <canvas id="particleCanvas"></canvas>
+        
+        <div class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
         </div>
-    </section>
 
-    <section id="ia-section" class="section">
-        <h1 class="main-title" style="font-size: 3rem;">Gemini IA</h1>
-        <div id="ia-chat">
-            <div id="chat-output">Escribe algo para empezar...</div>
-            <div class="chat-input-area">
-                <input type="text" id="user-input" placeholder="Pregunta algo...">
-                <button id="send-btn" onclick="askGemini()">ENVIAR</button>
-            </div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item active" onclick="showSection('games')">Juegos</div>
+            <div class="sidebar-item" onclick="showSection('ia')">IA Gemini</div>
         </div>
-    </section>
 
-    <div id="gameModal" class="modal-overlay" onclick="if(event.target === this) closeGame()">
-        <div class="modal-content">
-            <div class="modal-bar">
-                <button style="color:var(--text-color); background:none; border:1px solid rgba(128,128,128,0.5); padding:5px 12px; cursor:pointer; border-radius:4px;" onclick="toggleFS()">PANTALLA COMPLETA</button>
-                <button class="close-x" onclick="closeGame()">&times;</button>
+        <div class="top-right-controls">
+            <div id="clock">00:00:00</div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Modo Claro</button>
+        </div>
+
+        <section id="games-section" class="section active">
+            <h1 class="main-title">UBGames.88</h1>
+            <div class="games-grid">
+                <div class="game-card" onclick="openGame('https://geometrylitepc.io/')"><h3>Geometry Lite</h3></div>
+                <div class="game-card" onclick="openGame('https://survival-race.io/')"><h3>Survival Race</h3></div>
+                <div class="game-card" onclick="openGame('https://spacewaves.io/')"><h3>Space Waves</h3></div>
+                <div class="game-card" onclick="openGame('https://eaglercraft.dev/')"><h3>Minecraft</h3></div>
+                <div class="game-card" onclick="openGame('https://escaperoad.io/')"><h3>Scape Road</h3></div>
+                <div class="game-card" onclick="openGame('https://theimpostor.es/')"><h3>Impostor</h3></div>
             </div>
-            <iframe id="gameFrame" src=""></iframe>
+        </section>
+
+        <section id="ia-section" class="section">
+            <h1 class="main-title" style="font-size: 3rem;">Gemini IA</h1>
+            <div id="ia-chat">
+                <div id="chat-output">Escribe algo para empezar...</div>
+                <div class="chat-input-area">
+                    <input type="text" id="user-input" placeholder="Pregunta algo...">
+                    <button id="send-btn" onclick="askGemini()">ENVIAR</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="gameModal" class="modal-overlay" onclick="if(event.target === this) closeGame()">
+            <div class="modal-content">
+                <div class="modal-bar">
+                    <button style="color:var(--text-color); background:none; border:1px solid rgba(128,128,128,0.5); padding:5px 12px; cursor:pointer; border-radius:4px;" onclick="toggleFS()">PANTALLA COMPLETA</button>
+                    <button class="close-x" onclick="closeGame()">&times;</button>
+                </div>
+                <iframe id="gameFrame" src=""></iframe>
+            </div>
         </div>
     </div>
 
     <script>
+        // LÓGICA DE CONTRASEÑA
+        const lockInput = document.getElementById('lock-input');
+        const lockScreen = document.getElementById('lock-screen');
+        const mainContent = document.getElementById('main-content');
+
+        lockInput.addEventListener('input', (e) => {
+            if (e.target.value.toLowerCase() === 'castor') {
+                lockScreen.classList.add('hidden');
+                mainContent.classList.add('visible');
+                // Enfocar el input de IA si el usuario va directo allí
+                setTimeout(() => { lockScreen.style.display = 'none'; }, 500);
+            }
+        });
+
+        // RESTO DEL CÓDIGO
+        const API_KEY = "AIzaSyCeSAza9EzpyakNSRMeXvMN47XeXFcVNNk"; 
+
         function toggleSidebar() {
             document.getElementById('menuBtn').classList.toggle('open');
             document.getElementById('sidebar').classList.toggle('active');
@@ -233,13 +279,11 @@
             const input = document.getElementById('user-input');
             const output = document.getElementById('chat-output');
             const msg = input.value.trim();
-            if(!msg) return;
+            if(!msg || !API_KEY) return;
 
             output.innerHTML += `<div><b>Tú:</b> ${msg}</div>`;
             input.value = "";
-            const API_KEY = "AIzaSyCeSAza9EzpyakNSRMeXvMN47XeXFcVNNk"; 
             const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
             const loadingId = "loading-" + Date.now();
             output.innerHTML += `<div id="${loadingId}" style="opacity:0.5;"><i>Pensando...</i></div>`;
             output.scrollTop = output.scrollHeight;
@@ -257,7 +301,7 @@
                 output.innerHTML += `<div style="color:var(--accent-ia); margin-bottom:15px;"><b>Gemini:</b> ${text}</div>`;
             } catch (e) {
                 if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-                output.innerHTML += `<div style="color:#ff4d4d;">Error: Verifica tu API Key en la consola.</div>`;
+                output.innerHTML += `<div style="color:#ff4d4d;">Error. Verifica la consola (F12).</div>`;
                 console.error("Error Gemini:", e);
             }
             output.scrollTop = output.scrollHeight;
