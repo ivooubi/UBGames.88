@@ -100,13 +100,23 @@
         .section.active { display: flex; }
         .main-title { font-size: 4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 30px; pointer-events: auto; text-align: center;}
 
+        /* REORGANIZACIÓN A 3 COLUMNAS */
         .games-grid { 
             display: grid; 
-            grid-template-columns: repeat(2, 250px); 
+            grid-template-columns: repeat(3, 250px); 
             gap: 20px; 
             pointer-events: auto; 
-            padding: 20px 20px 100px 20px; /* Padding extra abajo para scroll */
+            padding: 20px 20px 100px 20px;
         }
+
+        /* Ajuste para móviles */
+        @media (max-width: 850px) {
+            .games-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 550px) {
+            .games-grid { grid-template-columns: 1fr; }
+        }
+
         .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 30px 15px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-5px); }
         .game-card h3 { margin: 0; font-size: 0.9rem; text-transform: uppercase; }
@@ -167,10 +177,14 @@
                 <div class="game-card" onclick="openGame('https://survival-race.io/')"><h3>Survival Race</h3></div>
                 <div class="game-card" onclick="openGame('https://spacewaves.io/')"><h3>Space Waves</h3></div>
                 <div class="game-card" onclick="openGame('https://eaglercraft.dev/')"><h3>Minecraft</h3></div>
-                <div class="game-card" onclick="openGame('https://rocketsoccerderby.gitlab.io/')"><h3>Rocket League</h3></div>
+                <div class="game-card" onclick="openGame('https://www.msn.com/en-us/play')"><h3>Msn Games</h3></div>
                 <div class="game-card" onclick="openGame('https://theimpostor.es/')"><h3>Impostor</h3></div>
                 <div class="game-card" onclick="openGame('https://itsvijaysingh.github.io/Snow-Rider3D/')"><h3>Snow Riding</h3></div>
                 <div class="game-card" onclick="openGame('https://pizza-edition-unblocked.github.io/all-games.html')"><h3>Pizza Edition</h3></div>
+                <div class="game-card" onclick="openGame('https://23azo.com/')"><h3>23Azo</h3></div>
+                <div class="game-card" onclick="openGame('https://23-azo.github.io/')"><h3>23-Azo GitHub</h3></div>
+                <div class="game-card" onclick="openGame('https://core-ball.gitlab.io/')"><h3>Core Ball</h3></div>
+                <div class="game-card" onclick="openGame('https://1v1-lolunblocked.gitlab.io/')"><h3>1v1.LOL</h3></div>
             </div>
         </section>
 
@@ -213,7 +227,7 @@
             }
         });
 
-        const API_KEY = "AIzaSyCeSAza9EzpyakNSRMeXvMN47XeXFcVNNk"; 
+        const API_KEY = "AIzaSyCeSAza9EzpyakNSRMeXvMN47XeXFcVNNk"; //
 
         function toggleSidebar() {
             document.getElementById('menuBtn').classList.toggle('open');
