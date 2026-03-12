@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UBGames.88</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Nunito:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #050505;
             --text-color: #ffffff;
-            --sidebar-width: 280px;
-            --accent-ia: #00f2ff;
             --card-bg: rgba(20, 20, 20, 0.8);
             --sidebar-bg: rgba(10, 10, 10, 0.95);
+            --accent-ia: #00f2ff;
             --transition-speed: 0.5s;
         }
 
@@ -21,6 +20,7 @@
             --text-color: #1a1a1a;
             --card-bg: rgba(255, 255, 255, 0.8);
             --sidebar-bg: rgba(240, 240, 240, 0.95);
+            --accent-ia: #007bff;
         }
 
         body, html {
@@ -37,7 +37,7 @@
             position: fixed; left: 50%; transform: translateX(-50%);
             background: rgba(255, 77, 77, 0.1); border: 1.5px solid #ff4d4d;
             color: #ff4d4d; font-family: 'Nunito', sans-serif; font-size: 0.7rem;
-            padding: 5px 12px; border-radius: 20px; cursor: pointer; z-index: 10000;
+            padding: 5px 12px; border-radius: 20px; cursor: pointer; z-index: 100;
             transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
             font-weight: 900;
         }
@@ -59,7 +59,7 @@
             letter-spacing: 5px; text-transform: lowercase;
         }
 
-        /* PANTALLA JUEGOS */
+        /* CONTENIDO PRINCIPAL */
         #main-content { opacity: 0; transition: opacity 0.5s; height: 100%; width: 100%; display: none; }
         #main-content.visible { opacity: 1; display: block; }
         #particleCanvas, #particleCanvasCd { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
@@ -76,15 +76,42 @@
         #clock { font-weight: 900; font-size: 1.8rem; }
 
         .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; padding-top: 60px; scrollbar-width: none; }
-        .section::-webkit-scrollbar { display: none; }
         .section.active { display: flex; }
         .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 30px; text-align: center;}
 
-        /* GRID COMPACTO */
+        /* GRID JUEGOS */
         .games-grid { display: grid; grid-template-columns: repeat(3, 230px); gap: 15px; padding-bottom: 110px; }
         .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 22px 10px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-4px); }
         .game-card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; }
+
+        /* VENTANA FLOTANTE DEL JUEGO */
+        #game-window {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 90%; height: 85%; background: #000; border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); z-index: 5000;
+            display: none; flex-direction: column; opacity: 0; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+        }
+        #game-window.active { display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        
+        .game-header { width: 100%; height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Botón Pantalla Completa Simple */
+        .fullscreen-btn {
+            background: transparent; border: 1.5px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.8); font-family: 'Nunito', sans-serif;
+            font-weight: 700; font-size: 0.75rem; padding: 6px 14px;
+            border-radius: 20px; cursor: pointer; text-transform: uppercase;
+            letter-spacing: 0.5px; transition: 0.2s ease; outline: none;
+        }
+        .fullscreen-btn:hover { border-color: white; color: white; }
+
+        /* Botón Cerrar Simple */
+        .close-x { color: #ff4d4d; font-size: 1.8rem; font-weight: 900; cursor: pointer; transition: 0.2s ease; border: none; background: none; outline: none; padding: 0; line-height: 1; }
+        .close-x:hover { color: #ff6e6e; }
+        
+        #game-iframe { width: 100%; height: calc(100% - 50px); border: none; background: #000; }
 
         /* PANTALLA CUENTA ATRÁS */
         #countdown-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; }
@@ -100,7 +127,6 @@
         .cd-controls { margin-top: 50px; display: flex; gap: 60px; z-index: 10; }
         .cd-controls button { background: none; border: none; color: var(--text-color); font-size: 4rem; cursor: pointer; transition: 0.2s; outline: none;}
 
-        /* Animaciones ultra-fluidas */
         .center-active { transform: translateX(0) scale(1); opacity: 1; }
         .slide-out-left { transform: translateX(-150%) rotate(-10deg); opacity: 0; }
         .slide-out-right { transform: translateX(150%) rotate(10deg); opacity: 0; }
@@ -115,6 +141,14 @@
     <div id="lock-screen">
         <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.5; margin-bottom: 20px;">INTRODUCE EL CÓDIGO</p>
         <input type="password" id="lock-input" placeholder="••••••" autofocus>
+    </div>
+
+    <div id="game-window">
+        <div class="game-header">
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">Pantalla completa</button>
+            <button class="close-x" onclick="closeGame()">✕</button>
+        </div>
+        <iframe id="game-iframe" src=""></iframe>
     </div>
 
     <div id="main-content">
@@ -170,6 +204,9 @@
         const lockScreen = document.getElementById('lock-screen');
         const mainContent = document.getElementById('main-content');
         const cdScreen = document.getElementById('countdown-screen');
+        const gameWindow = document.getElementById('game-window');
+        const gameIframe = document.getElementById('game-iframe');
+        const castorExit = document.getElementById('castor-exit');
 
         const defaultDates = [
             { name: "Verano", date: "2026-06-21" },
@@ -198,6 +235,7 @@
         function logout() {
             mainContent.classList.remove('visible');
             cdScreen.classList.remove('visible');
+            if (document.fullscreenElement) document.exitFullscreen();
             setTimeout(() => {
                 mainContent.style.display = 'none';
                 cdScreen.style.display = 'none';
@@ -206,6 +244,42 @@
                 lockInput.focus();
             }, 500);
         }
+
+        function openGame(url) {
+            gameIframe.src = url;
+            gameWindow.style.display = 'flex';
+            castorExit.style.display = 'none';
+            setTimeout(() => gameWindow.classList.add('active'), 10);
+        }
+
+        function closeGame() {
+            gameWindow.classList.remove('active');
+            if (document.fullscreenElement) document.exitFullscreen();
+            castorExit.style.display = 'block';
+            setTimeout(() => {
+                gameWindow.style.display = 'none';
+                gameIframe.src = '';
+            }, 300);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                gameIframe.requestFullscreen().catch(err => {
+                    gameWindow.requestFullscreen();
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.querySelector('.fullscreen-btn');
+            if (document.fullscreenElement) {
+                btn.textContent = "Salir pantalla completa";
+            } else {
+                btn.textContent = "Pantalla completa";
+            }
+        });
 
         function updatePostItContent() {
             const item = countdowns[cdIndex];
@@ -219,7 +293,6 @@
             if(isAnimating) return; isAnimating = true;
             const p = document.getElementById('post-it');
             p.className = 'post-it slide-out-left';
-            
             setTimeout(() => {
                 cdIndex = (cdIndex + 1) % countdowns.length;
                 updatePostItContent();
@@ -236,7 +309,6 @@
             if(isAnimating) return; isAnimating = true;
             const p = document.getElementById('post-it');
             p.className = 'post-it slide-out-right';
-            
             setTimeout(() => {
                 cdIndex = (cdIndex - 1 + countdowns.length) % countdowns.length;
                 updatePostItContent();
@@ -275,7 +347,6 @@
             particles.forEach((p,i) => { p.y+=p.v; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill(); if(p.y>canv.height) particles.splice(i,1); });
             requestAnimationFrame(render);
         }
-        function openGame(url) { window.open(url, '_blank'); }
     </script>
 </body>
 </html>
