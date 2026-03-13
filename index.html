@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -75,9 +76,12 @@
         .top-right-controls { position: fixed; top: 20px; right: 25px; display: flex; flex-direction: column; align-items: flex-end; z-index: 100; }
         #clock { font-weight: 900; font-size: 1.8rem; }
 
-        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; padding-top: 60px; scrollbar-width: none; }
+        /* SECCIÓN AJUSTADA: Subida un poco (padding-top reducido de 60 a 40) */
+        .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; padding-top: 40px; scrollbar-width: none; }
         .section.active { display: flex; }
-        .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 30px; text-align: center;}
+        
+        /* TÍTULO AJUSTADO: Subida un poco (margin-bottom reducido de 30 a 20) */
+        .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center;}
 
         /* GRID JUEGOS */
         .games-grid { display: grid; grid-template-columns: repeat(3, 230px); gap: 15px; padding-bottom: 110px; }
@@ -176,7 +180,6 @@
                 <div class="game-card" onclick="openGame('https://23-azo.github.io/')"><h3>23-Azo GitHub</h3></div>
                 <div class="game-card" onclick="openGame('https://startgamer.net/game/31434')"><h3>My Perfect Hotel</h3></div>
                 <div class="game-card" onclick="openGame('https://1v1-lolunblocked.gitlab.io/')"><h3>1v1.LOL</h3></div>
-                
                 <div class="game-card" onclick="openGame('https://bigsmacky3.github.io/games/flash48.html')"><h3>Flash 48</h3></div>
                 <div class="game-card" onclick="openGame('https://tinyfishingame.com/')"><h3>Tiny Fishing</h3></div>
                 <div class="game-card" onclick="openGame('https://core-ball.gitlab.io/paper.io2.html')"><h3>Paper.io 2</h3></div>
