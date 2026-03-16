@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,6 +13,7 @@
             --sidebar-bg: rgba(10, 10, 10, 0.95);
             --accent-ia: #00f2ff;
             --transition-speed: 0.5s;
+            --danger: #ff4d4d;
         }
 
         body.light-mode {
@@ -36,15 +36,16 @@
         /* BOTONES SALIR */
         .exit-btn {
             position: fixed; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 77, 77, 0.1); border: 1.5px solid #ff4d4d;
-            color: #ff4d4d; font-family: 'Nunito', sans-serif; font-size: 0.7rem;
+            background: rgba(255, 77, 77, 0.1); border: 1.5px solid var(--danger);
+            color: var(--danger); font-family: 'Nunito', sans-serif; font-size: 0.7rem;
             padding: 5px 12px; border-radius: 20px; cursor: pointer; z-index: 100;
             transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
             font-weight: 900;
         }
-        .exit-btn:hover { background: #ff4d4d; color: white; transform: translateX(-50%) scale(1.1); }
+        .exit-btn:hover { background: var(--danger); color: white; transform: translateX(-50%) scale(1.1); }
         #castor-exit { bottom: 15px; }
-        #tiempo-exit { bottom: 25px; }
+        
+        .game-open #castor-exit { display: none; }
 
         /* PANTALLA BLOQUEO */
         #lock-screen {
@@ -63,79 +64,65 @@
         /* CONTENIDO PRINCIPAL */
         #main-content { opacity: 0; transition: opacity 0.5s; height: 100%; width: 100%; display: none; }
         #main-content.visible { opacity: 1; display: block; }
-        #particleCanvas, #particleCanvasCd { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
+        #particleCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: none; }
 
-        .menu-btn { position: fixed; top: 25px; left: 25px; width: 35px; height: 26px; z-index: 1001; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
-        .menu-btn .bar { width: 100%; height: 4px; background-color: var(--text-color); transition: 0.4s; border-radius: 2px; }
+        /* MENU HAMBURGER MEJORADO */
+        .menu-btn { 
+            position: fixed; top: 25px; left: 25px; width: 30px; height: 22px; 
+            z-index: 1001; cursor: pointer; display: flex; flex-direction: column; 
+            justify-content: space-between; 
+        }
+        .menu-btn .bar { 
+            width: 100%; height: 3px; background-color: var(--text-color); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease; 
+            border-radius: 2px;
+        }
+        /* Animación a X Roja Perfecta */
+        .menu-btn.open .bar { background-color: var(--danger); }
+        .menu-btn.open .bar:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
+        .menu-btn.open .bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .menu-btn.open .bar:nth-child(3) { transform: translateY(-9.5px) rotate(-45deg); }
         
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(20px); z-index: 1000; transition: 0.4s; padding-top: 100px; border-right: 1px solid rgba(128,128,128,0.2); }
         .sidebar.active { left: 0; }
-        .sidebar-item { padding: 20px 40px; font-weight: 700; cursor: pointer; opacity: 0.6; text-transform: uppercase; }
-        .sidebar-item.active { opacity: 1; background: rgba(128,128,128,0.1); }
+        .sidebar-item { padding: 20px 40px; font-weight: 700; cursor: pointer; opacity: 0.6; text-transform: uppercase; transition: 0.2s; }
+        .sidebar-item:hover { opacity: 1; background: rgba(128,128,128,0.1); }
+        .sidebar-item.active { opacity: 1; border-left: 4px solid var(--text-color); }
 
         .top-right-controls { position: fixed; top: 20px; right: 25px; display: flex; flex-direction: column; align-items: flex-end; z-index: 100; }
         #clock { font-weight: 900; font-size: 1.8rem; }
 
-        /* SECCIÓN AJUSTADA: Subida un poco (padding-top reducido de 60 a 40) */
         .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; padding-top: 40px; scrollbar-width: none; }
         .section.active { display: flex; }
         
-        /* TÍTULO AJUSTADO: Subida un poco (margin-bottom reducido de 30 a 20) */
-        .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center;}
+        /* Titulo más arriba */
+        .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center; margin-top: 10px; }
 
-        /* GRID JUEGOS */
-        .games-grid { display: grid; grid-template-columns: repeat(3, 230px); gap: 15px; padding-bottom: 110px; }
+        /* GRID JUEGOS más arriba y con margen inferior para no tocar el botón salir */
+        .games-container { display: grid; grid-template-columns: repeat(3, 230px); gap: 15px; padding-bottom: 120px; }
+        
         .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 22px 10px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-4px); }
         .game-card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; }
 
-        /* VENTANA FLOTANTE DEL JUEGO */
+        /* VENTANA FLOTANTE */
         #game-window {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
             width: 90%; height: 85%; background: #000; border-radius: 15px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8); z-index: 5000;
-            display: none; flex-direction: column; opacity: 0; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: none; flex-direction: column; opacity: 0; transition: 0.3s;
             border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
         }
         #game-window.active { display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        
-        .game-header { width: 100%; height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
-        .fullscreen-btn {
-            background: transparent; border: 1.5px solid rgba(255,255,255,0.3);
-            color: rgba(255,255,255,0.8); font-family: 'Nunito', sans-serif;
-            font-weight: 700; font-size: 0.75rem; padding: 6px 14px;
-            border-radius: 20px; cursor: pointer; text-transform: uppercase;
-            letter-spacing: 0.5px; transition: 0.2s ease; outline: none;
+        .game-header { width: 100%; height: 50px; background: #111; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; }
+        .fullscreen-btn { background: transparent; border: 1.5px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; font-weight: 900; }
+        .close-x { color: var(--danger); font-size: 1.8rem; font-weight: 900; cursor: pointer; border: none; background: none; }
+        #game-iframe { width: 100%; height: calc(100% - 50px); border: none; }
+
+        @media (max-width: 850px) { 
+            .games-container { grid-template-columns: repeat(2, 1fr); } 
+            .main-title { font-size: 2.2rem; }
         }
-        .fullscreen-btn:hover { border-color: white; color: white; }
-
-        .close-x { color: #ff4d4d; font-size: 1.8rem; font-weight: 900; cursor: pointer; transition: 0.2s ease; border: none; background: none; outline: none; padding: 0; line-height: 1; }
-        .close-x:hover { color: #ff6e6e; }
-        
-        #game-iframe { width: 100%; height: calc(100% - 50px); border: none; background: #000; }
-
-        /* PANTALLA CUENTA ATRÁS */
-        #countdown-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s; }
-        #countdown-screen.visible { opacity: 1; display: flex; }
-        #cd-title-input { background: transparent; border: none; color: var(--text-color); font-family: 'Montserrat'; font-size: 3rem; font-weight: 900; text-align: center; outline: none; text-transform: uppercase; width: 90%; margin-bottom: 10px; }
-        #cd-date-input { background: rgba(128,128,128,0.1); border: 1px solid rgba(128,128,128,0.3); color: var(--text-color); font-family: 'Montserrat'; font-weight: bold; border-radius: 8px; padding: 8px 15px; margin-bottom: 40px; outline: none; }
-        
-        .cd-carousel { position: relative; width: 320px; height: 320px; perspective: 1200px; display: flex; justify-content: center; align-items: center; }
-        .post-it { width: 280px; height: 280px; background: #929292; border-radius: 25px; box-shadow: 10px 15px 35px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; color: white; position: absolute; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; }
-        .cd-number { font-size: 7rem; font-weight: 900; line-height: 1; margin-bottom: -10px; }
-        .cd-text { font-size: 1.8rem; font-weight: 800; letter-spacing: 3px; }
-        
-        .cd-controls { margin-top: 50px; display: flex; gap: 60px; z-index: 10; }
-        .cd-controls button { background: none; border: none; color: var(--text-color); font-size: 4rem; cursor: pointer; transition: 0.2s; outline: none;}
-
-        .center-active { transform: translateX(0) scale(1); opacity: 1; }
-        .slide-out-left { transform: translateX(-150%) rotate(-10deg); opacity: 0; }
-        .slide-out-right { transform: translateX(150%) rotate(10deg); opacity: 0; }
-        .prepare-left { transform: translateX(-150%); opacity: 0; transition: none; }
-        .prepare-right { transform: translateX(150%); opacity: 0; transition: none; }
-
-        @media (max-width: 850px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
@@ -156,18 +143,26 @@
     <div id="main-content">
         <canvas id="particleCanvas"></canvas>
         <button class="exit-btn" id="castor-exit" onclick="logout()">Salir</button>
-        <div class="menu-btn" onclick="toggleSidebar()"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item active" onclick="showSection('games')">Juegos</div>
-            <div class="sidebar-item" onclick="showSection('ia')">IA Gemini</div>
+        
+        <div class="menu-btn" id="hamburger-menu" onclick="toggleSidebar()">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
         </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item active" id="btn-games" onclick="showSection('games')">Juegos</div>
+            <div class="sidebar-item" id="btn-more" onclick="showSection('more')">Más Juegos</div>
+        </div>
+
         <div class="top-right-controls">
             <div id="clock">00:00:00</div>
             <button class="theme-toggle" onclick="toggleTheme()" style="background:none; border:1px solid var(--text-color); color:var(--text-color); padding:5px 12px; cursor:pointer; border-radius:20px; font-size:0.7rem; margin-top:5px;">MODO CLARO</button>
         </div>
+        
         <section id="games-section" class="section active">
             <h1 class="main-title">UBGames.88</h1>
-            <div class="games-grid">
+            <div class="games-container">
                 <div class="game-card" onclick="openGame('https://geometrylitepc.io/')"><h3>Geometry Dash</h3></div>
                 <div class="game-card" onclick="openGame('https://survival-race.io/')"><h3>Survival Race</h3></div>
                 <div class="game-card" onclick="openGame('https://spacewaves.io/')"><h3>Space Waves</h3></div>
@@ -185,65 +180,47 @@
                 <div class="game-card" onclick="openGame('https://core-ball.gitlab.io/paper.io2.html')"><h3>Paper.io 2</h3></div>
             </div>
         </section>
-    </div>
 
-    <div id="countdown-screen">
-        <canvas id="particleCanvasCd"></canvas>
-        <button class="exit-btn" id="tiempo-exit" onclick="logout()">Salir</button>
-        <input type="text" id="cd-title-input" onchange="updateTitle(this.value)">
-        <input type="date" id="cd-date-input" onchange="updateDate(this.value)">
-        <div class="cd-carousel">
-            <div class="post-it center-active" id="post-it">
-                <div id="cd-days" class="cd-number">0</div>
-                <div class="cd-text">DÍAS</div>
+        <section id="more-section" class="section">
+            <div class="games-container">
+                <div class="game-card" onclick="openGame('https://fnaf1.io/')"><h3>Five Nights at Freddy's</h3></div>
+                <div class="game-card" onclick="openGame('https://thepenaltyshooters.com/')"><h3>Penalty Shooters</h3></div>
+                <div class="game-card" onclick="openGame('https://monkeymart.co.uk/')"><h3>Monkey Mart</h3></div>
             </div>
-        </div>
-        <div class="cd-controls">
-            <button onclick="prevCountdown()">&#10094;</button>
-            <button onclick="nextCountdown()">&#10095;</button>
-        </div>
+        </section>
     </div>
 
     <script>
         const lockInput = document.getElementById('lock-input');
         const lockScreen = document.getElementById('lock-screen');
         const mainContent = document.getElementById('main-content');
-        const cdScreen = document.getElementById('countdown-screen');
         const gameWindow = document.getElementById('game-window');
         const gameIframe = document.getElementById('game-iframe');
-        const castorExit = document.getElementById('castor-exit');
+        const hamburger = document.getElementById('hamburger-menu');
 
-        const defaultDates = [
-            { name: "Verano", date: "2026-06-21" },
-            { name: "Halloween", date: "2026-10-31" },
-            { name: "Navidad", date: "2026-12-25" }
-        ];
-        let countdowns = JSON.parse(localStorage.getItem('valeria_dates')) || defaultDates;
-        let cdIndex = 0;
-        let isAnimating = false;
-
-        function saveToLocal() { localStorage.setItem('valeria_dates', JSON.stringify(countdowns)); }
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id + '-section').classList.add('active');
+            
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            if(id === 'games') document.getElementById('btn-games').classList.add('active');
+            if(id === 'more') document.getElementById('btn-more').classList.add('active');
+            
+            toggleSidebar();
+        }
 
         lockInput.addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            if (val === 'castor') {
+            if (e.target.value.toLowerCase() === 'castor') {
                 lockScreen.classList.add('hidden');
                 mainContent.style.display = 'block';
-                setTimeout(() => { mainContent.classList.add('visible'); initCanvas('particleCanvas'); }, 10);
-            } else if (val === 'tiempo') {
-                lockScreen.classList.add('hidden');
-                cdScreen.style.display = 'flex';
-                setTimeout(() => { cdScreen.classList.add('visible'); updatePostItContent(); initCanvas('particleCanvasCd'); }, 10);
+                setTimeout(() => { mainContent.classList.add('visible'); initCanvas(); }, 10);
             }
         });
 
         function logout() {
             mainContent.classList.remove('visible');
-            cdScreen.classList.remove('visible');
-            if (document.fullscreenElement) document.exitFullscreen();
             setTimeout(() => {
                 mainContent.style.display = 'none';
-                cdScreen.style.display = 'none';
                 lockScreen.classList.remove('hidden');
                 lockInput.value = '';
                 lockInput.focus();
@@ -253,96 +230,39 @@
         function openGame(url) {
             gameIframe.src = url;
             gameWindow.style.display = 'flex';
-            castorExit.style.display = 'none';
+            document.body.classList.add('game-open');
             setTimeout(() => gameWindow.classList.add('active'), 10);
         }
 
         function closeGame() {
             gameWindow.classList.remove('active');
-            if (document.fullscreenElement) document.exitFullscreen();
-            castorExit.style.display = 'block';
-            setTimeout(() => {
-                gameWindow.style.display = 'none';
-                gameIframe.src = '';
-            }, 300);
+            document.body.classList.remove('game-open');
+            setTimeout(() => { gameWindow.style.display = 'none'; gameIframe.src = ''; }, 300);
         }
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                gameIframe.requestFullscreen().catch(err => {
-                    gameWindow.requestFullscreen();
-                });
-            } else {
-                document.exitFullscreen();
-            }
+            if (!document.fullscreenElement) gameIframe.requestFullscreen().catch(() => gameWindow.requestFullscreen());
+            else document.exitFullscreen();
         }
-
-        document.addEventListener('fullscreenchange', () => {
-            const btn = document.querySelector('.fullscreen-btn');
-            if (document.fullscreenElement) {
-                btn.textContent = "Salir pantalla completa";
-            } else {
-                btn.textContent = "Pantalla completa";
-            }
-        });
-
-        function updatePostItContent() {
-            const item = countdowns[cdIndex];
-            document.getElementById('cd-title-input').value = item.name;
-            document.getElementById('cd-date-input').value = item.date;
-            const diff = new Date(item.date) - new Date();
-            document.getElementById('cd-days').textContent = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
-        }
-
-        function nextCountdown() {
-            if(isAnimating) return; isAnimating = true;
-            const p = document.getElementById('post-it');
-            p.className = 'post-it slide-out-left';
-            setTimeout(() => {
-                cdIndex = (cdIndex + 1) % countdowns.length;
-                updatePostItContent();
-                p.style.transition = 'none';
-                p.className = 'post-it prepare-right';
-                void p.offsetWidth;
-                p.style.transition = '';
-                p.className = 'post-it center-active';
-                isAnimating = false;
-            }, 250);
-        }
-
-        function prevCountdown() {
-            if(isAnimating) return; isAnimating = true;
-            const p = document.getElementById('post-it');
-            p.className = 'post-it slide-out-right';
-            setTimeout(() => {
-                cdIndex = (cdIndex - 1 + countdowns.length) % countdowns.length;
-                updatePostItContent();
-                p.style.transition = 'none';
-                p.className = 'post-it prepare-left';
-                void p.offsetWidth;
-                p.style.transition = '';
-                p.className = 'post-it center-active';
-                isAnimating = false;
-            }, 250);
-        }
-
-        function updateTitle(v) { countdowns[cdIndex].name = v; saveToLocal(); }
-        function updateDate(v) { countdowns[cdIndex].date = v; updatePostItContent(); saveToLocal(); }
 
         function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-ES', {hour12:false}); }
         setInterval(updateClock, 1000); updateClock();
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-        function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id+'-section').classList.add('active'); toggleSidebar(); }
+
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            hamburger.classList.toggle('open');
+        }
+
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
 
         let particles = [];
         let ctx = null, canv = null;
-        function initCanvas(id) { 
-            canv = document.getElementById(id); 
+        function initCanvas() { 
+            canv = document.getElementById('particleCanvas'); 
             ctx = canv.getContext('2d'); 
             canv.width = window.innerWidth; 
             canv.height = window.innerHeight; 
-            if(particles.length === 0) render(); 
+            render(); 
         }
         function render() {
             if(!ctx) return;
