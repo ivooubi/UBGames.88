@@ -15,7 +15,6 @@
             --transition-speed: 0.5s;
             --danger: #ff4d4d;
         }
-
         body.light-mode {
             --bg-color: #e0e0e0;
             --text-color: #1a1a1a;
@@ -23,7 +22,6 @@
             --sidebar-bg: rgba(240, 240, 240, 0.95);
             --accent-ia: #007bff;
         }
-
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: var(--bg-color);
@@ -32,7 +30,6 @@
             overflow: hidden;
             transition: background-color var(--transition-speed), color var(--transition-speed);
         }
-
         /* BOTONES SALIR */
         .exit-btn {
             position: fixed; left: 50%; transform: translateX(-50%);
@@ -44,7 +41,6 @@
         }
         .exit-btn:hover { background: var(--danger); color: white; transform: translateX(-50%) scale(1.1); }
         #castor-exit { bottom: 15px; }
-        
         .game-open #castor-exit { display: none; }
 
         /* PANTALLA BLOQUEO */
@@ -77,7 +73,6 @@
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease; 
             border-radius: 2px;
         }
-        /* Animación a X Roja Perfecta */
         .menu-btn.open .bar { background-color: var(--danger); }
         .menu-btn.open .bar:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
         .menu-btn.open .bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
@@ -94,13 +89,9 @@
 
         .section { display: none; position: relative; z-index: 50; flex-direction: column; align-items: center; height: 100vh; overflow-y: auto; padding-top: 40px; scrollbar-width: none; }
         .section.active { display: flex; }
-        
-        /* Titulo más arriba */
         .main-title { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; text-align: center; margin-top: 10px; }
 
-        /* GRID JUEGOS más arriba y con margen inferior para no tocar el botón salir */
         .games-container { display: grid; grid-template-columns: repeat(3, 230px); gap: 15px; padding-bottom: 120px; }
-        
         .game-card { background: var(--card-bg); border: 1px solid rgba(128, 128, 128, 0.2); padding: 22px 10px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
         .game-card:hover { border-color: var(--text-color); transform: translateY(-4px); }
         .game-card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; }
@@ -186,6 +177,7 @@
                 <div class="game-card" onclick="openGame('https://fnaf1.io/')"><h3>Five Nights at Freddy's</h3></div>
                 <div class="game-card" onclick="openGame('https://thepenaltyshooters.com/')"><h3>Penalty Shooters</h3></div>
                 <div class="game-card" onclick="openGame('https://monkeymart.co.uk/')"><h3>Monkey Mart</h3></div>
+                <div class="game-card" onclick="openGame('https://zapgames.io/')"><h3>Zap Games</h3></div>
             </div>
         </section>
     </div>
@@ -241,8 +233,12 @@
         }
 
         function toggleFullscreen() {
-            if (!document.fullscreenElement) gameIframe.requestFullscreen().catch(() => gameWindow.requestFullscreen());
-            else document.exitFullscreen();
+            if (!document.fullscreenElement) {
+                if (gameIframe.requestFullscreen) gameIframe.requestFullscreen();
+                else if (gameWindow.requestFullscreen) gameWindow.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
         }
 
         function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-ES', {hour12:false}); }
@@ -269,7 +265,13 @@
             ctx.clearRect(0,0,canv.width,canv.height);
             if(Math.random()>0.9) particles.push({x:Math.random()*canv.width, y:-10, v:Math.random()*2+1});
             ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-color');
-            particles.forEach((p,i) => { p.y+=p.v; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill(); if(p.y>canv.height) particles.splice(i,1); });
+            particles.forEach((p,i) => { 
+                p.y+=p.v; 
+                ctx.beginPath(); 
+                ctx.arc(p.x,p.y,2,0,Math.PI*2); 
+                ctx.fill(); 
+                if(p.y>canv.height) particles.splice(i,1); 
+            });
             requestAnimationFrame(render);
         }
     </script>
