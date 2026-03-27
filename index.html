@@ -1,6 +1,4 @@
 
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,6 +32,7 @@
             overflow: hidden;
             transition: background-color var(--transition-speed), color var(--transition-speed);
         }
+
         /* BOTONES SALIR */
         .exit-btn {
             position: fixed; left: 50%; transform: translateX(-50%);
@@ -81,7 +80,7 @@
         .menu-btn.open .bar:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
         .menu-btn.open .bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
         .menu-btn.open .bar:nth-child(3) { transform: translateY(-9.5px) rotate(-45deg); }
-        
+                
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(20px); z-index: 1000; transition: 0.4s; padding-top: 100px; border-right: 1px solid rgba(128,128,128,0.2); }
         .sidebar.active { left: 0; }
         .sidebar-item { padding: 20px 40px; font-weight: 700; cursor: pointer; opacity: 0.6; text-transform: uppercase; transition: 0.2s; }
@@ -121,7 +120,6 @@
     </style>
 </head>
 <body>
-
     <div id="lock-screen">
         <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.5; margin-bottom: 20px;">INTRODUCE EL CÓDIGO</p>
         <input type="password" id="lock-input" placeholder="••••••" autofocus>
@@ -148,7 +146,7 @@
         <div class="sidebar" id="sidebar">
             <div class="sidebar-item active" id="btn-games" onclick="showSection('games')">Juegos</div>
             <div class="sidebar-item" id="btn-more" onclick="showSection('more')">Más Juegos</div>
-            <div class="sidebar-item" id="btn-apps" onclick="showSection('apps')">Apps</div>
+            <div class="sidebar-item" id="btn-mypages" onclick="showSection('mypages')">Mis páginas</div>
         </div>
 
         <div class="top-right-controls">
@@ -191,15 +189,16 @@
                 <div class="game-card" onclick="openGame('https://thepizzaedition-games.github.io/')"><h3>Pizza Ed. Games</h3></div>
                 <div class="game-card" onclick="openGame('https://subwaysurfersunblocked.org/es')"><h3>Subway Surfers</h3></div>
                 <div class="game-card" onclick="openGame('https://harshulmoon.github.io/fnae.html')"><h3>Five Nights at Epstein</h3></div>
+                <div class="game-card" onclick="openGame('https://soundbuttons.com/es')"><h3>SoundButtons</h3></div>
             </div>
         </section>
 
-        <section id="apps-section" class="section">
-            <h1 class="main-title">Aplicaciones</h1>
+        <section id="mypages-section" class="section">
+            <h1 class="main-title">Mis páginas</h1>
             <div class="games-container">
-                <div class="game-card" onclick="openGame('https://https://client.chatcrypt.com//')"><h3>ChatCrypt</h3></div>
-                <div class="game-card" onclick="openGame('https://https://reloj-alarma.es/cronometro/#/')"><h3>Cronometro</h3></div>
-                <div class="game-card" onclick="openGame('https://soundbuttons.com/es')"><h3>SoundButtons</h3></div>
+                <div class="game-card" onclick="window.open('https://ivooubi.github.io/todolist/', '_blank')"><h3>To Do List</h3></div>
+                <div class="game-card" onclick="window.open('https://ivooubi.github.io/clicker/', '_blank')"><h3>Clicker</h3></div>
+                <div class="game-card" onclick="window.open('https://ivooubi.github.io/zen/', '_blank')"><h3>Zen</h3></div>
             </div>
         </section>
     </div>
@@ -213,15 +212,12 @@
         const hamburger = document.getElementById('hamburger-menu');
 
         function showSection(id) {
-            // Ocultar todas las secciones
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            // Mostrar la seleccionada
             document.getElementById(id + '-section').classList.add('active');
-            
-            // Actualizar estilo de la barra lateral
             document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-            document.getElementById('btn-' + id).classList.add('active');
-            
+            if(document.getElementById('btn-' + id)) {
+                document.getElementById('btn-' + id).classList.add('active');
+            }
             toggleSidebar();
         }
 
@@ -290,12 +286,12 @@
             if(Math.random()>0.9) particles.push({x:Math.random()*canv.width, y:-10, v:Math.random()*2+1});
             ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-color');
             particles.forEach((p,i) => { 
-                p.y+=p.v; 
-                ctx.beginPath(); 
-                ctx.arc(p.x,p.y,2,0,Math.PI*2); 
-                ctx.fill(); 
-                if(p.y>canv.height) particles.splice(i,1); 
-            });
+                 p.y+=p.v; 
+                 ctx.beginPath(); 
+                 ctx.arc(p.x,p.y,2,0,Math.PI*2); 
+                 ctx.fill(); 
+                 if(p.y>canv.height) particles.splice(i,1); 
+             });
             requestAnimationFrame(render);
         }
     </script>
